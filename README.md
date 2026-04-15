@@ -2,13 +2,15 @@
 
 Recurse is a spaced-repetition platform explicitly designed for LeetCode-style problem solving and algorithmic mastery. It features a unique "Neon Biotech infused with Brutalist Signal" aesthetic, providing a highly focused and visually engaging environment to drill coding patterns.
 
-## 🚀 Core Value Propositions
+## 🚀 App Idea & Methodology
 
-The core philosophy behind Recurse is that algorithmic fluency comes from structured, timed repetition rather than isolated cramming. Our platform delivers this through three value-driven protocols:
+The core philosophy behind Recurse is that algorithmic fluency comes from structured, scientifically-timed repetition. Instead of blind cramming, Recurse leverages active recall and spaced repetition to build long-term retention. 
 
-1. **Build Unbreakable Muscle Memory**: Stop forgetting standard patterns. The *Diagnostic Shuffler* leverages intelligent spaced-repetition to surface the specific algorithmic concepts you struggle with right before you forget them, optimizing your study time.
-2. **Achieve Peak Algorithmic Fluency**: Speed and accuracy are critical in interviews. The *Telemetry Typewriter* provides a distraction-free, high-performance editor that tracks your problem-solving flow, allowing you to iterate rapidly and build raw coding speed.
-3. **Orchestrate Long-Term Mastery**: Never guess what you should study today. The *Cursor Protocol Scheduler* automatically generates your daily problem sets and visualizes your trajectory directly toward technical interview readiness.
+Our core methodology revolves around:
+
+1. **SM2 Algorithm Integration**: Dynamically calculates the optimal interval for reviewing each coding pattern based on your individual performance and difficulty ratings, maximizing retention while minimizing unnecessary review time.
+2. **Active Recall Tracking**: Forces active pattern retrieval from memory. By tracking your recall speed and accuracy, the system continually calibrates your fluency curve to ensure that cognitive pathways are strengthened effectively.
+3. **Optimized Cognitive Load**: By precisely scheduling reviews right before you are likely to forget them (in accordance with the Ebbinghaus forgetting curve), Recurse ensures you permanently build muscle memory for complex algorithmic approaches.
 
 ## 🛠️ Tech Stack
 
