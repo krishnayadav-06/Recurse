@@ -2,13 +2,13 @@
 
 Recurse is a spaced-repetition platform explicitly designed for LeetCode-style problem solving and algorithmic mastery. It features a unique "Neon Biotech infused with Brutalist Signal" aesthetic, providing a highly focused and visually engaging environment to drill coding patterns.
 
-## 🚀 App Idea & Methodology
+## 🚀 Core Value Propositions
 
-The core philosophy behind Recurse is that algorithmic fluency comes from structured, timed repetition rather than isolated cramming. To facilitate this, the application is built around three core protocols:
+The core philosophy behind Recurse is that algorithmic fluency comes from structured, timed repetition rather than isolated cramming. Our platform delivers this through three value-driven protocols:
 
-1. **Diagnostic Shuffler**: Intelligently shuffles and surfaces algorithmic problems based on a spaced-repetition algorithm. It prioritizes the specific patterns you struggle with to optimize your study time.
-2. **Telemetry Typewriter**: A focused, distraction-free code editor environment built for rapid iteration and muscle memory building, complete with telemetry to track the speed and accuracy of your problem-solving flow.
-3. **Cursor Protocol Scheduler**: A timeline-based scheduling system that orchestrates your daily problem sets and maps out your long-term mastery trajectory.
+1. **Build Unbreakable Muscle Memory**: Stop forgetting standard patterns. The *Diagnostic Shuffler* leverages intelligent spaced-repetition to surface the specific algorithmic concepts you struggle with right before you forget them, optimizing your study time.
+2. **Achieve Peak Algorithmic Fluency**: Speed and accuracy are critical in interviews. The *Telemetry Typewriter* provides a distraction-free, high-performance editor that tracks your problem-solving flow, allowing you to iterate rapidly and build raw coding speed.
+3. **Orchestrate Long-Term Mastery**: Never guess what you should study today. The *Cursor Protocol Scheduler* automatically generates your daily problem sets and visualizes your trajectory directly toward technical interview readiness.
 
 ## 🛠️ Tech Stack
 
