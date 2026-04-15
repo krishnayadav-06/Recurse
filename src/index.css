@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .magnetic-btn {
+    @apply transition-transform duration-300 overflow-hidden relative inline-flex items-center justify-center;
+    transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .magnetic-btn:hover {
+    transform: scale(1.03);
+  }
+  .magnetic-btn::before {
+    content: '';
+    @apply absolute top-1/2 left-1/2 w-full h-full bg-black/10 -translate-x-1/2 translate-y-full rounded-full transition-transform duration-500 ease-out;
+  }
+  .magnetic-btn:hover::before {
+    @apply translate-y-[-50%] scale-150;
+  }
+  
+  .brutal-shadow {
+    box-shadow: 4px 4px 0px 0px rgba(17, 17, 17, 1);
+  }
+
+  .nav-base {
+    background-color: transparent;
+  }
+  .nav-scrolled {
+    @apply border border-dark/10;
+    background-color: rgba(245, 243, 238, 0.6);
+    backdrop-filter: blur(16px);
+    color: #111111 !important;
+    mix-blend-mode: normal !important;
+  }
+}
+
