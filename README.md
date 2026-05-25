@@ -2,7 +2,7 @@
 
 > **Practice less. Remember more.**
 
-Recurse is a spaced-repetition review engine for LeetCode-style coding problems. Instead of grinding hundreds of problems you instantly forget, Recurse uses the **fsr algorithm** to surface each problem at the precise moment forgetting begins — turning passive practice into durable retention.
+Recurse is a spaced-repetition review engine for LeetCode-style coding problems. Instead of grinding hundreds of problems you instantly forget, Recurse uses the **FSRS algorithm** to surface each problem at the precise moment forgetting begins — turning passive practice into durable retention.
 
 ---
 
@@ -56,28 +56,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Available Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start development server with hot reload |
-| `npm run build` | Build the production bundle |
-| `npm run start` | Start the production server |
-| `npm run lint` | Run ESLint across the project |
-
----
-
-## Design System
-
-Recurse follows the **"Open Scaffold"** design language — inspired by cal.com's precision UI:
-
-- **Colors:** Pure white surface · `gray-900` ink · `blue-600` signal accent · `gray-200` borders
-- **Typography:** `Inter` (400–800 weight) for all UI · `JetBrains Mono` for intervals, durations, and code
-- **Shape:** `rounded-lg` (8px) for cards/buttons · `rounded-xl` (12px) for panels
-- **Motion:** GSAP `power3.out` entrances · `0.08s` text stagger · `0.15s` card stagger · ScrollTrigger-driven reveals
-- **Philosophy:** No photography in the hero. The product UI *is* the hero.
-
----
 
 ## Contributing
 
@@ -101,7 +80,6 @@ Contributions are welcome! Here's how to get involved:
 
 - **TypeScript** — all new components must be fully typed; avoid `any`.
 - **Component scope** — one component per file in `src/components/`.
-- **GSAP** — always use `gsap.context()` inside `useEffect` and return `ctx.revert()` for cleanup.
 - **Tailwind** — use existing design tokens; do not introduce ad-hoc arbitrary values unless strictly necessary.
 - **Naming** — PascalCase for components, camelCase for utilities and hooks.
 
@@ -114,6 +92,3 @@ Please open a GitHub Issue with:
 
 ---
 
-## License
-
-MIT © Krish — see [LICENSE](LICENSE) for details.
