@@ -21,11 +21,10 @@ const QueueItem = ({ title, tags, difficulty, lastReviewed, nextInterval, dueNow
       <div className="flex flex-col gap-1 mb-3 sm:mb-0">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-ink text-sm sm:text-base">{title}</span>
-          <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-medium ${
-            difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
+          <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-medium ${difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
             difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-            'bg-red-100 text-red-700'
-          }`}>
+              'bg-red-100 text-red-700'
+            }`}>
             {difficulty}
           </span>
         </div>
@@ -33,11 +32,11 @@ const QueueItem = ({ title, tags, difficulty, lastReviewed, nextInterval, dueNow
           {tags.map(tag => <span key={tag} className="bg-gray-100 px-1.5 py-0.5 rounded">{tag}</span>)}
         </div>
       </div>
-      
+
       <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
         <div className="flex flex-col text-right">
           <span className="text-[10px] text-muted">Last: {lastReviewed}</span>
-          <span className={`text-xs font-mono font-medium ${dueNow ? 'text-signal' : 'text-muted'}`}>
+          <span className={`text-xs font-mono font-medium ${dueNow ? 'text-ember' : 'text-muted'}`}>
             {dueNow ? 'Due now' : `+${nextInterval}`}
           </span>
         </div>
@@ -59,7 +58,7 @@ export const Hero = () => {
   useEffect(() => {
     let ctx = gsap.context(() => {
       // Left column text stagger
-      gsap.fromTo('.hero-text-element', 
+      gsap.fromTo('.hero-text-element',
         { y: 40, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.8, stagger: 0.08, ease: 'power3.out', delay: 0.1 }
       );
@@ -80,23 +79,23 @@ export const Hero = () => {
       <div className="flex flex-col items-start z-10">
         <div className="hero-text-element inline-flex items-center text-xs font-mono text-signal bg-blue-50 border border-blue-200 rounded-full px-3 py-1 mb-6">
           <span className="w-1.5 h-1.5 rounded-full bg-signal mr-2 animate-pulse"></span>
-          SM-2 Algorithm Active
+          FRFS Algorithm Active
         </div>
-        
+
         <h1 className="hero-text-element font-extrabold text-5xl md:text-6xl lg:text-7xl text-ink tracking-tight leading-none mb-6">
           Practice less.<br />
-          <span className="text-gray-400">Remember more.</span>
+          <span className="text-gray-900">Remember more.</span>
         </h1>
-        
-        <p className="hero-text-element text-lg md:text-xl text-muted font-normal max-w-lg mb-8 leading-relaxed">
-          Recurse schedules your LeetCode reviews using spaced repetition — so you stop re-solving the same problems from scratch.
+
+        <p className="hero-text-element text-lg md:text-xl text-gray-800 font-normal max-w-lg mb-8 leading-relaxed">
+          Recurse schedules your LeetCode reviews using spaced repetition - so you stop re-solving the same problems from scratch.
         </p>
-        
+
         <div className="hero-text-element flex flex-col sm:flex-row w-full sm:w-auto gap-4 mb-6">
           <Button variant="primary" className="py-3 px-6 text-base">Start your queue</Button>
           <Button variant="ghost" className="py-3 px-6 text-base border-gray-300">View methodology</Button>
         </div>
-        
+
         <div className="hero-text-element text-sm text-gray-400 flex items-center gap-2">
           <CheckCircle2 size={16} /> Free for single users. No credit card required.
         </div>
@@ -113,38 +112,38 @@ export const Hero = () => {
             </div>
             <div className="text-xs font-mono text-muted">recurse --queue today</div>
           </div>
-          
+
           <div className="flex flex-col">
-            <QueueItem 
-              title="Two Sum" 
-              tags={['Array', 'Hash Table']} 
+            <QueueItem
+              title="Two Sum"
+              tags={['Array', 'Hash Table']}
               difficulty="Easy"
               lastReviewed="12h ago"
               nextInterval="0d"
               dueNow={true}
               index={0}
             />
-            <QueueItem 
-              title="LRU Cache" 
-              tags={['Design', 'Linked List']} 
+            <QueueItem
+              title="LRU Cache"
+              tags={['Design', 'Linked List']}
               difficulty="Medium"
               lastReviewed="2d ago"
               nextInterval="1d"
               dueNow={false}
               index={1}
             />
-            <QueueItem 
-              title="Sliding Window Maximum" 
-              tags={['Array', 'Queue']} 
+            <QueueItem
+              title="Sliding Window Maximum"
+              tags={['Array', 'Queue']}
               difficulty="Hard"
               lastReviewed="4d ago"
               nextInterval="3d"
               dueNow={false}
               index={2}
             />
-            <QueueItem 
-              title="Merge Intervals" 
-              tags={['Array', 'Sorting']} 
+            <QueueItem
+              title="Merge Intervals"
+              tags={['Array', 'Sorting']}
               difficulty="Medium"
               lastReviewed="7d ago"
               nextInterval="14d"
@@ -152,9 +151,9 @@ export const Hero = () => {
               index={3}
               isMobileHidden={true}
             />
-            <QueueItem 
-              title="Valid Anagram" 
-              tags={['String', 'Hash Table']} 
+            <QueueItem
+              title="Valid Anagram"
+              tags={['String', 'Hash Table']}
               difficulty="Easy"
               lastReviewed="14d ago"
               nextInterval="30d"

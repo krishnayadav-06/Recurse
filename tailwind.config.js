@@ -18,6 +18,7 @@ export default {
         'wash': '#F9FAFB',
         'signal': '#2563EB',
         'dark': '#111827',
+        'ember': '#E8490F',
       }
     },
   },

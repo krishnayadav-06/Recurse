@@ -11,7 +11,7 @@ export const Protocol = () => {
   useEffect(() => {
     let ctx = gsap.context(() => {
       const cards = gsap.utils.toArray<HTMLElement>('.protocol-card');
-      
+
       cards.forEach((card, index) => {
         if (index < cards.length - 1) {
           ScrollTrigger.create({
@@ -69,7 +69,7 @@ export const Protocol = () => {
   return (
     <section id="protocol" ref={containerRef} className="w-full bg-white relative py-12">
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24">
-        
+
         {/* Step 1 */}
         <div className="protocol-card min-h-[90vh] flex items-center justify-center mb-12">
           <div className="w-full bg-white border border-border-light rounded-xl shadow-2xl shadow-gray-200/50 overflow-hidden">
@@ -107,7 +107,7 @@ export const Protocol = () => {
                 <span className="text-xs font-mono text-gray-400 font-semibold tracking-wider">STEP 02</span>
                 <h3 className="text-3xl md:text-4xl font-extrabold text-ink tracking-tight mt-4">Review on schedule</h3>
                 <p className="text-base text-muted mt-4 max-w-sm leading-relaxed">
-                  Recurse tells you what to review today. The SM-2 algorithm ensures you only practice the problems you're about to forget.
+                  Recurse tells you what to review today. The FRFS algorithm ensures you only practice the problems you're about to forget.
                 </p>
               </div>
               <div className="bg-wash rounded-xl h-64 md:h-80 flex items-center justify-center relative overflow-hidden border border-border-light/50">
@@ -142,14 +142,14 @@ export const Protocol = () => {
                   <line x1="0" y1="90" x2="300" y2="90" stroke="#E5E7EB" strokeWidth="1" strokeDasharray="4 4" />
                   <line x1="0" y1="60" x2="300" y2="60" stroke="#E5E7EB" strokeWidth="1" strokeDasharray="4 4" />
                   <line x1="0" y1="30" x2="300" y2="30" stroke="#E5E7EB" strokeWidth="1" strokeDasharray="4 4" />
-                  
+
                   {/* Waveform */}
-                  <path 
+                  <path
                     className="svg-pulse"
-                    d="M 0 120 C 30 120, 40 100, 50 80 C 60 60, 70 30, 90 30 C 110 30, 120 70, 140 70 C 160 70, 170 50, 190 40 C 210 30, 230 40, 250 20 C 270 0, 290 10, 300 10" 
-                    fill="none" 
-                    stroke="#2563EB" 
-                    strokeWidth="3" 
+                    d="M 0 120 C 30 120, 40 100, 50 80 C 60 60, 70 30, 90 30 C 110 30, 120 70, 140 70 C 160 70, 170 50, 190 40 C 210 30, 230 40, 250 20 C 270 0, 290 10, 300 10"
+                    fill="none"
+                    stroke="#2563EB"
+                    strokeWidth="3"
                     strokeLinecap="round"
                   />
                   {/* Data Points */}

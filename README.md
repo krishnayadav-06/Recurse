@@ -8,8 +8,8 @@ Recurse is a spaced-repetition review engine for LeetCode-style coding problems.
 
 ## Value Propositions
 
-### 🧠 Retention Over Volume
-Review fewer problems, remember more. SM-2 schedules each problem at the exact moment your memory begins to fade — so every session compounds instead of resets.
+### 🧠 Adaptive Spacing
+Review fewer problems, remember more. FRFS schedules each problem at the exact moment your memory begins to fade — so every session compounds instead of resets.
 
 ### ⚡ Queue, Not Grind
 A daily review queue that takes 15 minutes, not 3 hours. Problems you've solved become problems you *own*. No more re-solving the same problem from scratch six months later.
