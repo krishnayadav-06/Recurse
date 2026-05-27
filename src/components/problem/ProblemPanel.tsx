@@ -2,12 +2,13 @@
 
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { getPatternStyles } from "../../lib/utils";
 
 interface ProblemPanelProps {
   title: string;
   description: string;
   constraints: string[];
-  examples: Array<{ input: string; output: string; explanation?: string }>;
+  examples: Array<{ input: string; output: string; explanation?: string; images?: string[] }>;
   hints: string[];
   tags: string[];
 }
@@ -34,10 +35,24 @@ export function ProblemPanel({
       {examples.length > 0 && (
         <div className="space-y-3">
           {examples.map((ex, idx) => (
-            <div key={idx} className="border border-gray-200 rounded-lg p-3 space-y-1">
+            <div key={idx} className="border border-gray-200 bg-gray-50/50 rounded-lg p-3 space-y-1">
               <div className="text-xs font-medium text-gray-400 uppercase tracking-wide">
                 Example {idx + 1}
               </div>
+              
+              {ex.images && ex.images.length > 0 && (
+                <div className="flex flex-col gap-2 mt-2 mb-1">
+                  {ex.images.map((imgUrl, i) => (
+                    <img 
+                      key={i} 
+                      src={imgUrl} 
+                      alt={`Example ${idx + 1} Image ${i + 1}`} 
+                      className="max-w-full rounded-md border border-gray-200 shadow-sm max-h-64 object-contain self-start" 
+                    />
+                  ))}
+                </div>
+              )}
+              
               <div className="font-mono text-xs text-gray-800 break-words mt-1">
                 <span className="text-gray-500">Input:</span> {ex.input}
                 <br />
@@ -60,7 +75,7 @@ export function ProblemPanel({
           <ul className="list-disc pl-5 space-y-1">
             {constraints.map((c, i) => (
               <li key={i} className="text-sm text-gray-600">
-                <code className="font-mono text-gray-700 bg-gray-50 px-1 py-0.5 rounded text-xs">{c}</code>
+                <code className="font-mono text-gray-700 bg-amber-50/50 border border-amber-100/50 px-1.5 py-0.5 rounded text-xs">{c}</code>
               </li>
             ))}
           </ul>
@@ -97,7 +112,7 @@ export function ProblemPanel({
           {tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-full bg-gray-100 text-gray-600 px-2.5 py-1 text-xs font-mono"
+              className={`rounded-full px-2.5 py-1 text-xs font-mono border ${getPatternStyles(tag)}`}
             >
               {tag}
             </span>

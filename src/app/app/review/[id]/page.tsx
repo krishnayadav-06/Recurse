@@ -28,6 +28,7 @@ interface ProblemRow {
   patterns: string[];
   starter_code: { python?: string; java?: string; cpp?: string } | null;
   sample_cases: SampleCase[] | null;
+  constraints: string[] | null;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -35,7 +36,7 @@ interface ProblemRow {
 /* -------------------------------------------------------------------------- */
 
 /** Parse "Input: ...\nOutput: ...\nExplanation: ..." from example_text */
-function parseSampleCase(raw: SampleCase): { input: string; output: string; explanation?: string } {
+function parseSampleCase(raw: SampleCase): { input: string; output: string; explanation?: string; images?: string[] } {
   const text = raw.example_text || "";
   const lines = text.split("\n");
 
@@ -54,16 +55,16 @@ function parseSampleCase(raw: SampleCase): { input: string; output: string; expl
     }
   }
 
-  return { input, output, explanation };
+  return { input, output, explanation, images: raw.images };
 }
 
 /**
- * Extract the problem body and constraints from the raw description.
+ * Extract the problem body from the raw description.
  * The description often ends with "Example N:" and "Constraints:" headers
  * with the actual values stripped out.
  */
-function parseDescription(raw: string | null): { body: string; constraints: string[] } {
-  if (!raw) return { body: "", constraints: [] };
+function parseDescription(raw: string | null): string {
+  if (!raw) return "";
 
   // Split at "Constraints:" if present
   const constraintsIdx = raw.indexOf("Constraints:");
@@ -74,9 +75,7 @@ function parseDescription(raw: string | null): { body: string; constraints: stri
     .replace(/\s*Example \d+:\s*/g, "")
     .trim();
 
-  // Constraints are stripped in the DB, so we return empty
-  // (they'd need to be re-scraped to populate)
-  return { body, constraints: [] };
+  return body;
 }
 
 /** Build test cases array from sample_cases for TestCasesPanel */
@@ -122,7 +121,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
     async function fetchProblem() {
       const { data, error: fetchError } = await supabase
         .from("problems")
-        .select("id, title, difficulty, description, patterns, starter_code, sample_cases")
+        .select("id, title, difficulty, description, patterns, starter_code, sample_cases, constraints")
         .eq("id", id)
         .single();
 
@@ -239,7 +238,8 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   }
 
   /* ---- Derived data ---- */
-  const { body: descriptionBody, constraints } = parseDescription(problem.description);
+  const descriptionBody = parseDescription(problem.description);
+  const constraints = problem.constraints || [];
   const examples = (problem.sample_cases || []).map(parseSampleCase);
   const tags = problem.patterns || [];
 

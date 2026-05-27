@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -18,8 +18,10 @@ import { supabase } from "../../../lib/supabase";
 import {
   CURATED_LISTS,
   CURATED_LIST_LABELS,
+  NEETCODE_150_SECTIONS,
   type CuratedListKey,
 } from "../../../lib/curated-lists";
+import { getPatternStyles } from "../../../lib/utils";
 
 /* -------------------------------------------------------------------------- */
 /*  Types                                                                     */
@@ -46,42 +48,6 @@ const DIFFICULTY_ORDER: Record<string, number> = {
   Hard: 2,
 };
 
-/* -------------------------------------------------------------------------- */
-/*  Pattern Color Helper                                                     */
-/* -------------------------------------------------------------------------- */
-
-function getPatternStyles(pattern: string): string {
-  const p = pattern.toLowerCase();
-  if (p.includes("tree") || p.includes("bst") || p.includes("trie")) {
-    return "bg-emerald-50 text-emerald-700 border-emerald-100";
-  }
-  if (p.includes("graph") || p.includes("bfs") || p.includes("dfs") || p.includes("matrix")) {
-    return "bg-indigo-50 text-indigo-700 border-indigo-100";
-  }
-  if (p.includes("dynamic programming") || p.includes("dp") || p.includes("greedy") || p.includes("backtracking")) {
-    return "bg-purple-50 text-purple-700 border-purple-100";
-  }
-  if (p.includes("pointer") || p.includes("binary search") || p.includes("sliding window") || p.includes("search")) {
-    return "bg-sky-50 text-sky-700 border-sky-100";
-  }
-  if (p.includes("math") || p.includes("bit") || p.includes("counting") || p.includes("combinatorics") || p.includes("bitmask")) {
-    return "bg-amber-50 text-amber-700 border-amber-200";
-  }
-  if (
-    p.includes("array") ||
-    p.includes("hash") ||
-    p.includes("string") ||
-    p.includes("stack") ||
-    p.includes("queue") ||
-    p.includes("design") ||
-    p.includes("heap") ||
-    p.includes("list") ||
-    p.includes("interval")
-  ) {
-    return "bg-blue-50 text-blue-700 border-blue-100";
-  }
-  return "bg-gray-50 text-gray-600 border-gray-200";
-}
 
 /* -------------------------------------------------------------------------- */
 /*  Dropdown                                                                  */
@@ -215,8 +181,18 @@ function PatternSelector({
       </button>
 
       {open && (
-        <div className="absolute z-30 mt-1 w-[calc(100vw-2rem)] sm:w-[480px] bg-white border border-gray-200 rounded-xl shadow-lg p-3 right-0 sm:left-0">
-          <div className="flex flex-col sm:flex-row gap-2 mb-3">
+        <>
+          {/* Mobile Overlay */}
+          <div 
+            className="fixed inset-0 bg-black/5 z-40 sm:hidden" 
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(false);
+            }} 
+          />
+          {/* Panel */}
+          <div className="fixed sm:absolute z-50 w-[calc(100vw-2rem)] sm:w-[480px] bg-white border border-gray-200 rounded-xl shadow-xl p-3 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 sm:top-auto sm:left-0 sm:translate-x-0 sm:translate-y-0 sm:mt-1">
+            <div className="flex flex-col sm:flex-row gap-2 mb-3">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
               <input
@@ -273,6 +249,7 @@ function PatternSelector({
             )}
           </div>
         </div>
+        </>
       )}
     </div>
   );
@@ -415,6 +392,17 @@ export default function ProblemsPage() {
     return ["All", ...Array.from(set).sort()];
   }, [problems]);
 
+  /* ---- Derived: problem topics for grouping ---- */
+  const problemTopics = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const section of NEETCODE_150_SECTIONS) {
+      for (const p of section.problems) {
+        map.set(p, section.topic);
+      }
+    }
+    return map;
+  }, []);
+
   /* ---- Filtered + sorted list ---- */
   const filtered = useMemo(() => {
     let result = problems;
@@ -451,6 +439,18 @@ export default function ProblemsPage() {
           cmp = (DIFFICULTY_ORDER[a.difficulty] ?? 1) - (DIFFICULTY_ORDER[b.difficulty] ?? 1);
         }
         return sortDir === "desc" ? -cmp : cmp;
+      });
+    } else {
+      // Default sort by the selected list's order, or NeetCode 150 if "All" is selected
+      const listForOrder = list !== "all" ? CURATED_LISTS[list] : CURATED_LISTS["neetcode-150"];
+      const orderArr = Array.from(listForOrder);
+      const orderMap = new Map(orderArr.map((id, idx) => [id, idx]));
+      
+      result = [...result].sort((a, b) => {
+        const orderA = orderMap.has(a.id) ? orderMap.get(a.id)! : 9999;
+        const orderB = orderMap.has(b.id) ? orderMap.get(b.id)! : 9999;
+        if (orderA !== orderB) return orderA - orderB;
+        return a.title.localeCompare(b.title);
       });
     }
 
@@ -603,7 +603,7 @@ export default function ProblemsPage() {
             )}
             <button
               onClick={clearAllFilters}
-              className="text-xs text-gray-500 hover:text-gray-900 underline cursor-pointer transition-colors"
+              className="px-3 py-1 text-xs font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
             >
               Clear all
             </button>
@@ -677,46 +677,66 @@ export default function ProblemsPage() {
                   </tr>
                 )}
 
-                {!loading &&
-                  filtered.map((problem, idx) => (
-                    <tr
-                      key={problem.id}
-                      onClick={() => router.push(`/app/review/${problem.id}`)}
-                      className="hover:bg-gray-50/75 cursor-pointer transition-colors duration-100 group"
-                    >
-                      <td className="font-mono text-xs text-gray-400 pl-4 py-3.5 hidden md:table-cell">
-                        {idx + 1}
-                      </td>
-                      <td className="px-3 py-3.5 font-medium text-gray-900 group-hover:text-signal transition-colors">
-                        {problem.title}
-                      </td>
-                      <td className="px-3 py-3.5">
-                        <DifficultyBadge difficulty={problem.difficulty} />
-                      </td>
-                      <td className="px-3 py-3.5 hidden md:table-cell">
-                        <div className="flex flex-wrap gap-1">
-                          {problem.patterns?.slice(0, 2).map((tag) => (
-                            <span
-                              key={tag}
-                              className={`rounded-full px-2 py-0.5 text-xs font-mono border ${getPatternStyles(tag)}`}
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                          {(problem.patterns?.length ?? 0) > 2 && (
-                            <span className="text-xs text-gray-400 font-mono self-center">
-                              +{problem.patterns.length - 2}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-3 py-3.5 text-right pr-4">
-                        <div className="flex justify-end">
-                          <StatusIcon reps={statusMap[problem.id]} />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                {!loading && (() => {
+                  let lastTopic: string | null = null;
+                  const isDefaultSort = !sortField && (list === "all" || list === "neetcode-150");
+
+                  return filtered.map((problem, idx) => {
+                    const currentTopic = problemTopics.get(problem.id) || "Uncategorized";
+                    const showHeader = isDefaultSort && currentTopic !== lastTopic;
+                    if (isDefaultSort) {
+                      lastTopic = currentTopic;
+                    }
+
+                    return (
+                      <React.Fragment key={problem.id}>
+                        {showHeader && (
+                          <tr className="bg-gray-50/80 border-y border-gray-200">
+                            <td colSpan={5} className="px-4 py-3 text-xs font-bold text-gray-900 uppercase tracking-widest text-center">
+                              {currentTopic}
+                            </td>
+                          </tr>
+                        )}
+                        <tr
+                          onClick={() => router.push(`/app/review/${problem.id}`)}
+                          className="hover:bg-gray-50/75 cursor-pointer transition-colors duration-100 group"
+                        >
+                          <td className="font-mono text-xs text-gray-400 pl-4 py-3.5 hidden md:table-cell">
+                            {idx + 1}
+                          </td>
+                          <td className="px-3 py-3.5 font-medium text-gray-900 group-hover:text-signal transition-colors">
+                            {problem.title}
+                          </td>
+                          <td className="px-3 py-3.5">
+                            <DifficultyBadge difficulty={problem.difficulty} />
+                          </td>
+                          <td className="px-3 py-3.5 hidden md:table-cell">
+                            <div className="flex flex-wrap gap-1">
+                              {problem.patterns?.slice(0, 2).map((tag) => (
+                                <span
+                                  key={tag}
+                                  className={`rounded-full px-2 py-0.5 text-xs font-mono border ${getPatternStyles(tag)}`}
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                              {(problem.patterns?.length ?? 0) > 2 && (
+                                <span className="text-xs text-gray-400 font-mono self-center">
+                                  +{problem.patterns.length - 2}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3.5 text-right pr-4">
+                            <div className="flex justify-end">
+                              <StatusIcon reps={statusMap[problem.id]} />
+                            </div>
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    );
+                  });
+                })()}
               </tbody>
             </table>
           </div>

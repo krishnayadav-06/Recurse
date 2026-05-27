@@ -2,6 +2,7 @@
 
 import { ArrowLeft, GripVertical, Columns, Rows, Maximize } from "lucide-react";
 import Link from "next/link";
+import { getPatternStyles } from "../../lib/utils";
 
 export type LayoutMode = "vertical" | "two-column" | "wide";
 
@@ -33,7 +34,7 @@ export function ProblemToolbar({
       <h1 className="font-medium text-gray-900 truncate max-w-[160px]">{title}</h1>
       
       {tags.length > 0 && (
-        <span className="rounded-full bg-gray-100 text-gray-600 px-2 py-0.5 text-xs font-mono hidden sm:inline-block">
+        <span className={`rounded-full px-2 py-0.5 text-xs font-mono hidden sm:inline-block border ${getPatternStyles(tags[0])}`}>
           {tags[0]}
         </span>
       )}
