@@ -3,5 +3,5 @@ node_modules
 .env*
 *.md
 !README.md
-CHANGES.md
-GEMINI (1).md
+.skills-lock.json
+scripts/seed.ts

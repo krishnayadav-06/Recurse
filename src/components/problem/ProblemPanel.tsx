@@ -26,7 +26,7 @@ export function ProblemPanel({
     <div className="h-full overflow-y-auto scrollbar-hide p-5 space-y-5 bg-white flex flex-col min-w-[260px]">
       <div className="space-y-4">
         <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-        <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+        <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
           {description}
         </div>
       </div>
