@@ -59,23 +59,45 @@ function parseSampleCase(raw: SampleCase): { input: string; output: string; expl
 }
 
 /**
- * Extract the problem body from the raw description.
- * The description often ends with "Example N:" and "Constraints:" headers
- * with the actual values stripped out.
+ * Extract the problem body from the raw HTML description.
+ * The description from LeetCode contains everything (body, examples, constraints)
+ * as raw HTML. We strip examples + constraints sections since those are rendered
+ * separately from the `sample_cases` and `constraints` columns.
  */
 function parseDescription(raw: string | null): string {
   if (!raw) return "";
 
-  // Split at "Constraints:" if present
-  const constraintsIdx = raw.indexOf("Constraints:");
-  const beforeConstraints = constraintsIdx >= 0 ? raw.substring(0, constraintsIdx) : raw;
+  // Normalize escaped newlines to actual newlines
+  let html = raw.replace(/\\n/g, "\n");
 
-  // Remove all "Example N:" fragments (sometimes lack a leading newline)
-  const body = beforeConstraints
-    .replace(/\s*Example \d+:\s*/g, "")
+  // Strip everything starting from the first Example heading
+  // Pattern: <strong class="example">Example or <p><strong class="example">
+  const exampleIdx = html.search(/<(p|strong)[^>]*class\s*=\s*["']?example/i);
+  if (exampleIdx >= 0) {
+    html = html.substring(0, exampleIdx);
+  } else {
+    // Fallback: look for "Example 1:" text
+    const fallbackIdx = html.indexOf("Example 1:");
+    if (fallbackIdx >= 0) {
+      // Walk back to find enclosing tag
+      const tagStart = html.lastIndexOf("<", fallbackIdx);
+      html = html.substring(0, tagStart >= 0 ? tagStart : fallbackIdx);
+    }
+  }
+
+  // Also strip Constraints section if it somehow appears before Examples
+  const constraintsIdx = html.search(/<strong>\s*Constraints:/i);
+  if (constraintsIdx >= 0) {
+    html = html.substring(0, constraintsIdx);
+  }
+
+  // Clean up trailing whitespace, empty paragraphs, nbsp
+  html = html
+    .replace(/<p>\s*&nbsp;\s*<\/p>/g, "")
+    .replace(/<p>\s*<\/p>/g, "")
     .trim();
 
-  return body;
+  return html;
 }
 
 /** Build test cases array from sample_cases for TestCasesPanel */
@@ -286,7 +308,6 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             constraints={constraints}
             examples={examples}
             hints={hints}
-            tags={tags}
           />
         }
         editorPanel={

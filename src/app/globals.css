@@ -31,3 +31,93 @@
     scrollbar-width: none;  /* Firefox */
   }
 }
+
+/* ---- Problem description HTML rendering ---- */
+.problem-description {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.problem-description p {
+  margin-bottom: 0.75rem;
+  line-height: 1.65;
+}
+
+.problem-description p:last-child {
+  margin-bottom: 0;
+}
+
+.problem-description code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.8em;
+  background-color: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+  color: #374151;
+}
+
+.problem-description em {
+  font-style: italic;
+}
+
+.problem-description strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+.problem-description pre {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.8em;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+.problem-description pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+.problem-description ul,
+.problem-description ol {
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+}
+
+.problem-description ul {
+  list-style-type: disc;
+}
+
+.problem-description ol {
+  list-style-type: decimal;
+}
+
+.problem-description li {
+  margin-bottom: 0.25rem;
+  line-height: 1.5;
+}
+
+.problem-description sup {
+  font-size: 0.7em;
+  vertical-align: super;
+  line-height: 0;
+}
+
+.problem-description a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.problem-description img {
+  max-width: 100%;
+  border-radius: 6px;
+  margin: 0.5rem 0;
+}

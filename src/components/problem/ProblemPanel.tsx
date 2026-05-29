@@ -2,7 +2,6 @@
 
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { getPatternStyles } from "../../lib/utils";
 
 interface ProblemPanelProps {
   title: string;
@@ -10,7 +9,6 @@ interface ProblemPanelProps {
   constraints: string[];
   examples: Array<{ input: string; output: string; explanation?: string; images?: string[] }>;
   hints: string[];
-  tags: string[];
 }
 
 export function ProblemPanel({
@@ -19,7 +17,6 @@ export function ProblemPanel({
   constraints,
   examples,
   hints,
-  tags,
 }: ProblemPanelProps) {
   const [hintsExpanded, setHintsExpanded] = useState(false);
 
@@ -27,9 +24,10 @@ export function ProblemPanel({
     <div className="h-full overflow-y-auto scrollbar-hide p-5 space-y-5 bg-white flex flex-col min-w-[260px]">
       <div className="space-y-4">
         <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-        <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
-          {description}
-        </div>
+        <div
+          className="problem-description text-sm text-gray-800 leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: description }}
+        />
       </div>
 
       {examples.length > 0 && (
@@ -106,19 +104,6 @@ export function ProblemPanel({
       )}
 
       <div className="flex-1" />
-
-      {tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 pt-3 border-t border-gray-100">
-          {tags.map((tag) => (
-            <span
-              key={tag}
-              className={`rounded-full px-2.5 py-1 text-xs font-mono border ${getPatternStyles(tag)}`}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
