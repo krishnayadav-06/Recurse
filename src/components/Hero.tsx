@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { Button } from './Button';
 import { CheckCircle2, Clock } from 'lucide-react';
+import Link from 'next/link';
 
 interface QueueItemProps {
   title: string;
@@ -41,7 +42,9 @@ const QueueItem = ({ title, tags, difficulty, lastReviewed, nextInterval, dueNow
           </span>
         </div>
         {dueNow ? (
-          <Button className="w-24">Review</Button>
+          <Link href={`/app/review/${title.toLowerCase().replace(/ /g, '-')}`}>
+            <Button className="w-24">Review</Button>
+          </Link>
         ) : (
           <div className="w-24 flex items-center justify-center">
             <Clock size={16} className="text-gray-300" />
@@ -92,7 +95,9 @@ export const Hero = () => {
         </p>
 
         <div className="hero-text-element flex flex-col sm:flex-row w-full sm:w-auto gap-4 mb-6">
-          <Button variant="primary" className="py-3 px-6 text-base">Start your queue</Button>
+          <Link href="/app/problems" className="w-full sm:w-auto">
+            <Button variant="primary" className="py-3 px-6 text-base w-full">Start your queue</Button>
+          </Link>
           <Button variant="ghost" className="py-3 px-6 text-base border-gray-300">View methodology</Button>
         </div>
 

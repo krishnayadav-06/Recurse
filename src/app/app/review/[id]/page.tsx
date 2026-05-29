@@ -72,6 +72,9 @@ function parseDescription(raw: string | null): string {
 
   // Strip everything starting from the first Example heading
   // Pattern: <strong class="example">Example or <p><strong class="example">
+  // TODO: This regex is fragile and relies on LeetCode's specific HTML structure.
+  // If LeetCode changes how they structure their example headers, this stripping logic will fail 
+  // and examples will duplicate in the UI. Keep an eye on this.
   const exampleIdx = html.search(/<(p|strong)[^>]*class\s*=\s*["']?example/i);
   if (exampleIdx >= 0) {
     html = html.substring(0, exampleIdx);
@@ -190,29 +193,75 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   }, [language, problem]);
 
   /* ---- Handlers ---- */
-  const handleRun = () => {
+  const handleRun = async () => {
     setTestCaseState("running");
-    // Mock run — will be replaced with real execution later
-    setTimeout(() => {
-      setTestCases(prev => prev.map(tc => ({
-        ...tc,
-        output: tc.expected,
-        status: "pass"
-      })));
-      setTestCaseState("results");
-    }, 1500);
-  };
+    try {
+      const res = await fetch("/api/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          problemId: id,
+          code,
+          language,
+          action: "run",
+        }),
+      });
 
-  const handleSubmit = () => {
-    setTestCaseState("grading");
-    // Mock grading — will be replaced with real AI grading later
-    setTimeout(() => {
+      const data = await res.json();
+      if (!res.ok) {
+        setGradingResult({
+          correct: false,
+          message: data.error + (data.details ? "\n\n" + data.details : ""),
+        });
+        setTestCaseState("graded");
+        return;
+      }
+
+      setTestCases(data.testCases);
+      setTestCaseState("results");
+    } catch (err: any) {
       setGradingResult({
-        correct: true,
-        message: "against the reference pattern.",
+        correct: false,
+        message: "Failed to connect to execution server: " + (err.message || String(err)),
       });
       setTestCaseState("graded");
-    }, 2000);
+    }
+  };
+
+  const handleSubmit = async () => {
+    setTestCaseState("grading");
+    try {
+      const res = await fetch("/api/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          problemId: id,
+          code,
+          language,
+          action: "submit",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setGradingResult({
+          correct: false,
+          message: data.error + (data.details ? "\n\n" + data.details : ""),
+        });
+        setTestCaseState("graded");
+        return;
+      }
+
+      setTestCases(data.testCases);
+      setGradingResult(data.gradingResult);
+      setTestCaseState("graded");
+    } catch (err: any) {
+      setGradingResult({
+        correct: false,
+        message: "Failed to connect to execution server: " + (err.message || String(err)),
+      });
+      setTestCaseState("graded");
+    }
   };
 
   /* ---- Loading state ---- */

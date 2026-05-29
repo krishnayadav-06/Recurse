@@ -2,6 +2,7 @@
 
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import DOMPurify from "isomorphic-dompurify";
 
 interface ProblemPanelProps {
   title: string;
@@ -26,7 +27,7 @@ export function ProblemPanel({
         <h2 className="text-base font-semibold text-gray-900">{title}</h2>
         <div
           className="problem-description text-sm text-gray-800 leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: description }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(description) }}
         />
       </div>
 

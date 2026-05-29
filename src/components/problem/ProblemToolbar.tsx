@@ -27,7 +27,7 @@ export function ProblemToolbar({
 }: ProblemToolbarProps) {
   return (
     <div className="h-10 px-4 border-b border-gray-200 flex items-center gap-3 text-sm bg-white shrink-0">
-      <Link href="/app/queue" className="text-gray-400 hover:text-gray-700">
+      <Link href="/app/problems" className="text-gray-400 hover:text-gray-700">
         <ArrowLeft size={18} />
       </Link>
       

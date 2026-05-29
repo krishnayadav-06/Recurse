@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from './Button';
+import Link from 'next/link';
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -55,7 +56,9 @@ export const Navbar = () => {
         </nav>
         
         <div className="hidden md:block">
-          <Button>Start your queue</Button>
+          <Link href="/app/problems">
+            <Button>Start your queue</Button>
+          </Link>
         </div>
 
         <button className="md:hidden text-ink" onClick={() => setMobileOpen(!mobileOpen)}>
@@ -69,7 +72,9 @@ export const Navbar = () => {
           <a href="#features" className="text-sm text-muted" onClick={() => setMobileOpen(false)}>Features</a>
           <a href="#protocol" className="text-sm text-muted" onClick={() => setMobileOpen(false)}>Protocol</a>
           <a href="#pricing" className="text-sm text-muted" onClick={() => setMobileOpen(false)}>Pricing</a>
-          <Button className="w-full">Start your queue</Button>
+          <Link href="/app/problems" className="w-full" onClick={() => setMobileOpen(false)}>
+            <Button className="w-full">Start your queue</Button>
+          </Link>
         </div>
       </div>
     </header>

@@ -308,3 +308,223 @@ export const CURATED_LIST_LABELS: Record<CuratedListKey, string> = {
   "blind-75": "Blind 75",
   "grind-75": "Grind 75",
 };
+
+export interface NeetCodeSection {
+  topic: string;
+  problems: string[];
+}
+
+export const NEETCODE_150_SECTIONS: NeetCodeSection[] = [
+  {
+    topic: "Arrays & Hashing",
+    problems: [
+      "contains-duplicate",
+      "valid-anagram",
+      "two-sum",
+      "group-anagrams",
+      "top-k-frequent-elements",
+      "product-of-array-except-self",
+      "valid-sudoku",
+      "longest-consecutive-sequence",
+    ],
+  },
+  {
+    topic: "Two Pointers",
+    problems: [
+      "valid-palindrome",
+      "two-sum-ii-input-array-is-sorted",
+      "3sum",
+      "container-with-most-water",
+      "trapping-rain-water",
+    ],
+  },
+  {
+    topic: "Sliding Window",
+    problems: [
+      "best-time-to-buy-and-sell-stock",
+      "longest-substring-without-repeating-characters",
+      "longest-repeating-character-replacement",
+      "permutation-in-string",
+      "minimum-window-substring",
+      "sliding-window-maximum",
+    ],
+  },
+  {
+    topic: "Stack",
+    problems: [
+      "valid-parentheses",
+      "evaluate-reverse-polish-notation",
+      "generate-parentheses",
+      "daily-temperatures",
+      "car-fleet",
+      "largest-rectangle-in-histogram",
+    ],
+  },
+  {
+    topic: "Binary Search",
+    problems: [
+      "binary-search",
+      "search-a-2d-matrix",
+      "koko-eating-bananas",
+      "find-minimum-in-rotated-sorted-array",
+      "search-in-rotated-sorted-array",
+      "median-of-two-sorted-arrays",
+    ],
+  },
+  {
+    topic: "Linked List",
+    problems: [
+      "reverse-linked-list",
+      "merge-two-sorted-lists",
+      "reorder-list",
+      "remove-nth-node-from-end-of-list",
+      "linked-list-cycle",
+      "merge-k-sorted-lists",
+      "reverse-nodes-in-k-group",
+    ],
+  },
+  {
+    topic: "Trees",
+    problems: [
+      "invert-binary-tree",
+      "maximum-depth-of-binary-tree",
+      "diameter-of-binary-tree",
+      "balanced-binary-tree",
+      "same-tree",
+      "subtree-of-another-tree",
+      "lowest-common-ancestor-of-a-binary-tree",
+      "binary-tree-level-order-traversal",
+      "binary-tree-right-side-view",
+      "count-good-nodes-in-binary-tree",
+      "validate-binary-search-tree",
+      "kth-smallest-element-in-a-bst",
+      "construct-binary-tree-from-preorder-and-inorder-traversal",
+      "binary-tree-maximum-path-sum",
+    ],
+  },
+  {
+    topic: "Heap / Priority Queue",
+    problems: [
+      "kth-largest-element-in-an-array",
+      "last-stone-weight",
+      "k-closest-points-to-origin",
+      "task-scheduler",
+    ],
+  },
+  {
+    topic: "Backtracking",
+    problems: [
+      "subsets",
+      "combination-sum",
+      "combination-sum-ii",
+      "permutations",
+      "subsets-ii",
+      "word-search",
+      "palindrome-partitioning",
+      "letter-combinations-of-a-phone-number",
+      "n-queens",
+    ],
+  },
+  {
+    topic: "Graphs",
+    problems: [
+      "number-of-islands",
+      "max-area-of-island",
+      "pacific-atlantic-water-flow",
+      "surrounded-regions",
+      "rotting-oranges",
+      "course-schedule",
+      "course-schedule-ii",
+      "redundant-connection",
+      "word-ladder",
+    ],
+  },
+  {
+    topic: "Dynamic Programming",
+    problems: [
+      "climbing-stairs",
+      "min-cost-climbing-stairs",
+      "house-robber",
+      "house-robber-ii",
+      "longest-palindromic-substring",
+      "palindromic-substrings",
+      "decode-ways",
+      "coin-change",
+      "maximum-product-subarray",
+      "word-break",
+      "longest-increasing-subsequence",
+      "partition-equal-subset-sum",
+      "longest-common-subsequence",
+      "best-time-to-buy-and-sell-stock-with-cooldown",
+      "target-sum",
+      "interleaving-string",
+      "longest-increasing-path-in-a-matrix",
+      "distinct-subsequences",
+      "edit-distance",
+      "burst-balloons",
+      "regular-expression-matching",
+    ],
+  },
+  {
+    topic: "Greedy",
+    problems: [
+      "maximum-subarray",
+      "jump-game",
+      "jump-game-ii",
+      "gas-station",
+      "hand-of-straights",
+      "merge-triplets-to-form-target-triplet",
+      "partition-labels",
+      "valid-parenthesis-string",
+    ],
+  },
+  {
+    topic: "Intervals",
+    problems: [
+      "insert-interval",
+      "merge-intervals",
+      "non-overlapping-intervals",
+    ],
+  },
+  {
+    topic: "Math & Geometry",
+    problems: [
+      "rotate-image",
+      "spiral-matrix",
+      "set-matrix-zeroes",
+      "happy-number",
+      "plus-one",
+      "powx-n",
+      "multiply-strings",
+    ],
+  },
+  {
+    topic: "Bit Manipulation",
+    problems: [
+      "single-number",
+      "number-of-1-bits",
+      "counting-bits",
+      "reverse-bits",
+      "missing-number",
+      "sum-of-two-integers",
+    ],
+  },
+  {
+    topic: "Advanced Graphs",
+    problems: [
+      "reconstruct-itinerary",
+      "min-cost-to-connect-all-points",
+      "network-delay-time",
+      "swim-in-rising-water",
+      "cheapest-flights-within-k-stops",
+    ],
+  },
+  {
+    topic: "Unique paths",
+    problems: [
+      "unique-paths",
+      "find-the-duplicate-number",
+    ],
+  },
+];
+
