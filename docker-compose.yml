@@ -1,0 +1,16 @@
+version: "3"
+services:
+  piston:
+    image: ghcr.io/engineer-man/piston
+    container_name: recursev2-piston-1
+    restart: always
+    privileged: true
+    ports:
+      - "2000:2000"
+    volumes:
+      - piston_packages:/piston/packages
+    tmpfs:
+      - /tmp:exec
+
+volumes:
+  piston_packages:
