@@ -14,7 +14,7 @@ import {
   RefreshCw,
   CheckCircle2,
 } from "lucide-react";
-import { supabase } from "../../../lib/supabase";
+import { createClient } from "../../../utils/supabase/client";
 import {
   CURATED_LISTS,
   CURATED_LIST_LABELS,
@@ -345,6 +345,7 @@ export default function ProblemsPage() {
     let cancelled = false;
 
     async function fetchData() {
+      const supabase = createClient();
       // Fire both queries in parallel
       const [problemsRes, statusRes] = await Promise.all([
         supabase

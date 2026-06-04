@@ -7,7 +7,7 @@ import { ProblemPanel } from "../../../../components/problem/ProblemPanel";
 import { EditorPanel } from "../../../../components/problem/EditorPanel";
 import { TestCasesPanel, TestCaseState } from "../../../../components/problem/TestCasesPanel";
 import { ResizableWorkspace } from "../../../../components/problem/ResizableWorkspace";
-import { supabase } from "../../../../lib/supabase";
+import { createClient } from "../../../../utils/supabase/client";
 import { Loader2 } from "lucide-react";
 
 /* -------------------------------------------------------------------------- */
@@ -119,6 +119,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
     let cancelled = false;
 
     async function fetchProblem() {
+      const supabase = createClient();
       const { data, error: fetchError } = await supabase
         .from("problems")
         .select("id, title, difficulty, description, patterns, starter_code, sample_cases, constraints")
@@ -168,29 +169,100 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   }, [language, problem]);
 
   /* ---- Handlers ---- */
-  const handleRun = () => {
+  const handleRun = async () => {
+    if (!problem) return;
     setTestCaseState("running");
-    // Mock run — will be replaced with real execution later
-    setTimeout(() => {
-      setTestCases(prev => prev.map(tc => ({
-        ...tc,
-        output: tc.expected,
-        status: "pass"
-      })));
+    
+    try {
+      const response = await fetch("/api/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          problemId: problem.id,
+          code,
+          language,
+          action: "run",
+        }),
+      });
+
+      const data = await response.json();
+      
       setTestCaseState("results");
-    }, 1500);
+
+      if (!response.ok || data.error) {
+         setGradingResult({
+           correct: false,
+           message: data.error || "An unknown error occurred during execution.",
+         });
+         return;
+      }
+
+      setTestCases(prev => prev.map((tc, idx) => {
+        if (data.failedCaseIndex !== null && idx === data.failedCaseIndex) {
+           return { ...tc, status: "fail", output: data.failedCase.actual };
+        } else if (data.failedCaseIndex === null || idx < data.failedCaseIndex) {
+           return { ...tc, status: "pass", output: tc.expected };
+        }
+        return { ...tc, status: undefined, output: "" }; // Pending / not run
+      }));
+      setGradingResult(undefined);
+
+    } catch (err: any) {
+      setTestCaseState("results");
+      setGradingResult({
+        correct: false,
+        message: err.message || "Failed to connect to execution server.",
+      });
+    }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!problem) return;
     setTestCaseState("grading");
-    // Mock grading — will be replaced with real AI grading later
-    setTimeout(() => {
-      setGradingResult({
-        correct: true,
-        message: "against the reference pattern.",
+    
+    try {
+      const response = await fetch("/api/execute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          problemId: problem.id,
+          code,
+          language,
+          action: "submit",
+        }),
       });
+
+      const data = await response.json();
+      
       setTestCaseState("graded");
-    }, 2000);
+
+      if (!response.ok || data.error) {
+         setGradingResult({
+           correct: false,
+           message: data.error || "An unknown error occurred during execution.",
+         });
+         return;
+      }
+
+      if (data.passed) {
+        setGradingResult({
+          correct: true,
+          message: `Passed all ${data.totalCases} test cases!`,
+        });
+      } else {
+        setGradingResult({
+          correct: false,
+          message: `Failed on test case ${data.failedCaseIndex + 1}. Expected: ${data.failedCase.expected}, Actual: ${data.failedCase.actual}`,
+          solution: `Input: ${data.failedCase.input}\nExpected: ${data.failedCase.expected}\nActual: ${data.failedCase.actual}`
+        });
+      }
+    } catch (err: any) {
+      setTestCaseState("graded");
+      setGradingResult({
+        correct: false,
+        message: err.message || "Failed to connect to execution server.",
+      });
+    }
   };
 
   /* ---- Loading state ---- */

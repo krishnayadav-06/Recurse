@@ -22,6 +22,7 @@ interface TestCasesPanelProps {
 
 export function TestCasesPanel({ state, testCases, onClose, gradingResult }: TestCasesPanelProps) {
   const [activeTab, setActiveTab] = useState<string>(testCases[0]?.id || "");
+  const [showSolution, setShowSolution] = useState(false);
   const [customInput, setCustomInput] = useState("");
 
   if (state === "hidden") return null;
@@ -67,16 +68,40 @@ export function TestCasesPanel({ state, testCases, onClose, gradingResult }: Tes
             <div className="mt-1 text-sm opacity-80">{gradingResult.message}</div>
           )}
           {!gradingResult.correct && gradingResult.solution && (
-            <button className="mt-2 text-xs font-medium border border-gray-300 rounded px-2 py-1 bg-white">
-              See reference solution ↓
+            <button 
+              onClick={() => setShowSolution(!showSolution)}
+              className="mt-2 text-xs font-medium border border-gray-300 rounded px-2 py-1 bg-white hover:bg-gray-50 transition-colors"
+            >
+              {showSolution ? "Hide reference solution ↑" : "See reference solution ↓"}
             </button>
           )}
         </div>
-        {!gradingResult.correct && gradingResult.solution && (
+        {!gradingResult.correct && gradingResult.solution && showSolution && (
           <div className="mt-4 bg-gray-950 rounded-lg p-4 font-mono text-xs text-green-400 overflow-x-auto">
             <pre>{gradingResult.solution}</pre>
           </div>
         )}
+      </div>
+    );
+  }
+
+  // Handle global run errors (e.g., compilation error, crash before outputting JSON)
+  // We can pass this error via gradingResult when state is "results"
+  if (state === "results" && gradingResult && !gradingResult.correct) {
+     return (
+      <div className="flex flex-col h-full bg-white relative overflow-y-auto scrollbar-hide p-5">
+        <button onClick={onClose} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-700 z-10">
+          <X size={16} />
+        </button>
+        <div className="border rounded-lg p-4 border-red-200 bg-red-50">
+          <div className="font-medium flex items-center gap-2 text-red-700">
+            <XCircle size={18} />
+            Execution Error
+          </div>
+        </div>
+        <div className="mt-4 bg-[#1e1e1e] rounded-lg p-4 font-mono text-xs text-red-400 overflow-x-auto">
+          <pre>{gradingResult.message}</pre>
+        </div>
       </div>
     );
   }
