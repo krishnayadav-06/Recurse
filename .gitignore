@@ -6,3 +6,5 @@ node_modules
 .skills-lock.json
 scripts/seed.ts
 *.tsbuildinfo
+data/
+scratch/
