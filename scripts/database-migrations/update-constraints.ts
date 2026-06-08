@@ -60,7 +60,7 @@ async function fetchConstraintsForSlug(slug: string): Promise<string[]> {
 
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 async function main() {
   console.log('Fetching all problems from Supabase using Anon Key...');

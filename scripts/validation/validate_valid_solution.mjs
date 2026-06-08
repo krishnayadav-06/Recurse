@@ -1,3 +1,4 @@
+import 'dotenv/config';
 const solutions = {
   "two-sum": {
     "python": `class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        m = {}\n        for i, n in enumerate(nums):\n            if target - n in m: return [m[target - n], i]\n            m[n] = i\n        return []`,

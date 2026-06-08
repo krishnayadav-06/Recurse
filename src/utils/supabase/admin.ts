@@ -7,11 +7,11 @@ import { createClient } from '@supabase/supabase-js'
  */
 export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+  const serviceRoleKey = process.env.SUPABASE_SECRET_KEY!
 
   if (!serviceRoleKey) {
     throw new Error(
-      'SUPABASE_SERVICE_ROLE_KEY is not set. This is required for server-side operations.'
+      'SUPABASE_SECRET_KEY is not set. This is required for server-side operations.'
     )
   }
 
