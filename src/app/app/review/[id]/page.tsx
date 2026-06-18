@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { LayoutMode, ProblemToolbar } from "../../../../components/problem/ProblemToolbar";
 import { ProblemPanel } from "../../../../components/problem/ProblemPanel";
 import { EditorPanel } from "../../../../components/problem/EditorPanel";
-import { TestCasesPanel, TestCaseState } from "../../../../components/problem/TestCasesPanel";
+import { TestCasesPanel, TestCaseState, type TestCase } from "../../../../components/problem/TestCasesPanel";
 import { ResizableWorkspace } from "../../../../components/problem/ResizableWorkspace";
 import { createClient } from "../../../../utils/supabase/client";
 import { Loader2 } from "lucide-react";
@@ -107,12 +107,13 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const [error, setError] = useState<string | null>(null);
 
   /* ---- UI state ---- */
-  const [layoutMode, setLayoutMode] = useState<LayoutMode>("two-column");
-  const [testCaseState, setTestCaseState] = useState<TestCaseState>("results");
-  const [language, setLanguage] = useState<string>("python");
+  const [language, setLanguage] = useState("python");
   const [code, setCode] = useState("");
-  const [testCases, setTestCases] = useState<any[]>([]);
-  const [gradingResult, setGradingResult] = useState<{ correct: boolean; message: string; solution?: string }>();
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>("two-column");
+  const [testCaseState, setTestCaseState] = useState<"hidden" | "running" | "grading" | "results" | "graded">("hidden");
+  const [panelTab, setPanelTab] = useState<"description" | "solutions" | "submissions">("description");
+  const [testCases, setTestCases] = useState<TestCase[]>([]);
+  const [gradingResult, setGradingResult] = useState<{ correct: boolean; message: string; solution?: string } | undefined>();
 
   /* ---- Fetch problem on mount ---- */
   useEffect(() => {
@@ -172,7 +173,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const handleRun = async () => {
     if (!problem) return;
     setTestCaseState("running");
-    
+
     try {
       const response = await fetch("/api/execute", {
         method: "POST",
@@ -186,22 +187,22 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
       });
 
       const data = await response.json();
-      
+
       setTestCaseState("results");
 
       if (!response.ok || data.error) {
-         setGradingResult({
-           correct: false,
-           message: data.error || "An unknown error occurred during execution.",
-         });
-         return;
+        setGradingResult({
+          correct: false,
+          message: data.error || "An unknown error occurred during execution.",
+        });
+        return;
       }
 
       setTestCases(prev => prev.map((tc, idx) => {
         if (data.failedCaseIndex !== null && idx === data.failedCaseIndex) {
-           return { ...tc, status: "fail", output: data.failedCase.actual };
+          return { ...tc, status: "fail", output: data.failedCase.actual };
         } else if (data.failedCaseIndex === null || idx < data.failedCaseIndex) {
-           return { ...tc, status: "pass", output: tc.expected };
+          return { ...tc, status: "pass", output: tc.expected };
         }
         return { ...tc, status: undefined, output: "" }; // Pending / not run
       }));
@@ -219,7 +220,8 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const handleSubmit = async () => {
     if (!problem) return;
     setTestCaseState("grading");
-    
+    setPanelTab("submissions");
+
     try {
       const response = await fetch("/api/execute", {
         method: "POST",
@@ -233,15 +235,15 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
       });
 
       const data = await response.json();
-      
+
       setTestCaseState("graded");
 
       if (!response.ok || data.error) {
-         setGradingResult({
-           correct: false,
-           message: data.error || "An unknown error occurred during execution.",
-         });
-         return;
+        setGradingResult({
+          correct: false,
+          message: data.error || "An unknown error occurred during execution.",
+        });
+        return;
       }
 
       if (data.passed) {
@@ -269,11 +271,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   if (loading) {
     return (
       <div className="flex flex-col h-screen bg-white">
-        <header className="h-14 border-b border-gray-200 flex items-center justify-between px-6 shrink-0 bg-white">
-          <div className="flex items-center gap-6">
-            <span className="font-semibold text-gray-900 cursor-pointer" onClick={() => router.push("/")}>Recurse</span>
-          </div>
-        </header>
+
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
@@ -288,11 +286,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   if (error || !problem) {
     return (
       <div className="flex flex-col h-screen bg-white">
-        <header className="h-14 border-b border-gray-200 flex items-center justify-between px-6 shrink-0 bg-white">
-          <div className="flex items-center gap-6">
-            <span className="font-semibold text-gray-900 cursor-pointer" onClick={() => router.push("/")}>Recurse</span>
-          </div>
-        </header>
+
         <div className="flex-1 flex items-center justify-center">
           <div className="border border-red-200 bg-red-50 rounded-lg p-6 text-sm text-red-700 max-w-md text-center">
             <p className="font-medium mb-1">Problem not found</p>
@@ -320,13 +314,23 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-white">
-      {/* Shell Nav */}
+      {/* 
       <header className="h-14 border-b border-gray-200 flex items-center justify-between px-6 shrink-0 bg-white">
         <div className="flex items-center gap-6">
           <span className="font-semibold text-gray-900 cursor-pointer" onClick={() => router.push("/")}>Recurse</span>
           <nav className="hidden md:flex gap-4">
-            <span className="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer">Dashboard</span>
-            <span className="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer">Queue</span>
+            <span 
+              className="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+              onClick={() => router.push("/app/dashboard")}
+            >
+              Dashboard
+            </span>
+            <span 
+              className="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
+              onClick={() => router.push("/app/queue")}
+            >
+              Queue
+            </span>
             <span
               className="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
               onClick={() => router.push("/app/problems")}
@@ -337,15 +341,17 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         </div>
         <div className="text-sm text-gray-500 cursor-pointer">User ▾</div>
       </header>
-
+      */}
       <ProblemToolbar
         title={problem.title}
         difficulty={problem.difficulty}
-        tags={tags}
         layoutMode={layoutMode}
         setLayoutMode={setLayoutMode}
         language={language}
         setLanguage={setLanguage}
+        onRun={handleRun}
+        onSubmit={handleSubmit}
+        isSubmitting={testCaseState === "grading"}
       />
 
       <ResizableWorkspace
@@ -353,12 +359,16 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         testCaseState={testCaseState}
         problemPanel={
           <ProblemPanel
+            problemId={problem.id}
             title={problem.title}
             description={descriptionBody}
             constraints={constraints}
             examples={examples}
             hints={hints}
             tags={tags}
+            activeTab={panelTab}
+            onTabChange={setPanelTab}
+            isSubmitting={testCaseState === "grading"}
           />
         }
         editorPanel={

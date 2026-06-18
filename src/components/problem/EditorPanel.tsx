@@ -21,21 +21,22 @@ export function EditorPanel({
   onRun,
   onSubmit,
 }: EditorPanelProps) {
-  // Keyboard shortcuts: Cmd/Ctrl+Enter → Run, Cmd/Ctrl+Shift+Enter → Submit
+  // Keyboard shortcuts: Ctrl+' → Run, Ctrl+Enter → Submit
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (isSubmitting) return;
 
       const mod = e.metaKey || e.ctrlKey;
-      if (!mod || e.key !== "Enter") return;
+      if (!mod) return;
 
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (e.shiftKey) {
-        onSubmit();
-      } else {
+      if (e.key === "'") {
+        e.preventDefault();
+        e.stopPropagation();
         onRun();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        onSubmit();
       }
     },
     [isSubmitting, onRun, onSubmit]
@@ -60,46 +61,11 @@ export function EditorPanel({
             scrollBeyondLastLine: false,
             renderLineHighlight: "line",
             bracketPairColorization: { enabled: true },
-            fontSize: 13,
-            fontFamily: "JetBrains Mono, monospace",
-            lineHeight: 1.6,
+            fontSize: 14,
+            fontFamily: 'Menlo, Monaco, Consolas, "Courier New", monospace',
+            lineHeight: 22,
           }}
         />
-      </div>
-
-      <div className="flex items-center gap-3 px-3 py-2 border-t border-gray-700 bg-[#1e1e1e] shrink-0">
-        {/* Run button — ember hover */}
-        <button
-          onClick={onRun}
-          disabled={isSubmitting}
-          className="border border-gray-600 text-gray-300 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-200 hover:border-ember hover:ring-1 hover:ring-ember disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          ▶ Run
-        </button>
-
-        {/* Submit button — CTA sweep animation matching Hero buttons */}
-        <button
-          onClick={onSubmit}
-          disabled={isSubmitting}
-          className="group relative inline-flex items-center justify-center overflow-hidden bg-white text-gray-900 rounded-lg px-3 py-1.5 text-xs font-medium transition-all duration-300 hover:-translate-y-[1px] disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <span className="absolute inset-0 bg-gray-200 translate-y-[100%] transition-transform duration-300 ease-out group-hover:translate-y-0 z-0" />
-          <span className="relative z-10 flex items-center gap-1.5">
-            {isSubmitting ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                <span className="font-mono">grading…</span>
-              </>
-            ) : (
-              "Submit →"
-            )}
-          </span>
-        </button>
-        
-        <div className="ml-auto hidden lg:flex items-center gap-4 text-xs font-mono text-gray-600">
-          <span>Cmd/Ctrl + Enter to Run</span>
-          <span>Cmd/Ctrl + Shift + Enter to Submit</span>
-        </div>
       </div>
     </div>
   );

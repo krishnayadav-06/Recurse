@@ -38,13 +38,21 @@ export function ResizableWorkspace({
     }
   }, [testCaseState]);
 
+  useEffect(() => {
+    const handleCollapse = () => {
+      testPanelRef.current?.collapse();
+    };
+    window.addEventListener("collapse-test-panel", handleCollapse);
+    return () => window.removeEventListener("collapse-test-panel", handleCollapse);
+  }, []);
+
   const showProblem = layoutMode !== "wide";
   const isVertical = layoutMode === "vertical";
 
   // ---------- Two-column (default) or wide-editor ----------
   if (!isVertical) {
     return (
-      <div className="h-[calc(100vh-6rem)] w-full">
+      <div className="h-[calc(100vh-2.25rem)] w-full">
         <PanelGroup direction="horizontal" autoSaveId="recurse-h">
           {/* Left: Problem description */}
           {showProblem && (
@@ -77,7 +85,7 @@ export function ResizableWorkspace({
                 order={2}
                 ref={testPanelRef}
                 defaultSize={20}
-                minSize={10}
+                minSize={0}
                 maxSize={60}
                 collapsible
                 collapsedSize={0}
@@ -93,7 +101,7 @@ export function ResizableWorkspace({
 
   // ---------- Vertical stack (mobile / focus) ----------
   return (
-    <div className="h-[calc(100vh-6rem)] w-full">
+    <div className="h-[calc(100vh-2.25rem)] w-full">
       <PanelGroup direction="vertical" autoSaveId="recurse-vert-stack">
         <Panel id="problem-v" order={1} defaultSize={35} minSize={15} maxSize={60}>
           <div className="h-full overflow-y-auto scrollbar-hide">{problemPanel}</div>
@@ -112,7 +120,7 @@ export function ResizableWorkspace({
           order={3}
           ref={testPanelRef}
           defaultSize={15}
-          minSize={10}
+          minSize={0}
           maxSize={50}
           collapsible
           collapsedSize={0}

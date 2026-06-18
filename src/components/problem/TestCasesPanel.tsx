@@ -5,7 +5,7 @@ import { useState } from "react";
 
 export type TestCaseState = "hidden" | "running" | "results" | "grading" | "graded";
 
-interface TestCase {
+export interface TestCase {
   id: string;
   input: string;
   output?: string;
@@ -25,30 +25,17 @@ export function TestCasesPanel({ state, testCases, onClose, gradingResult }: Tes
   const [showSolution, setShowSolution] = useState(false);
   const [customInput, setCustomInput] = useState("");
 
-  if (state === "hidden") return null;
-
-  if (state === "running" || state === "grading") {
-    return (
-      <div className="flex flex-col h-full bg-white relative">
-        <button onClick={onClose} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-700 z-10">
-          <X size={16} />
-        </button>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 size={24} className="animate-spin text-gray-400" />
-            <div className="font-mono text-xs text-gray-400">
-              {state === "grading" ? "grading with AI…" : "running test cases…"}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleClose = () => {
+    onClose();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("collapse-test-panel"));
+    }
+  };
 
   if (state === "graded" && gradingResult) {
     return (
       <div className="flex flex-col h-full bg-white relative overflow-y-auto scrollbar-hide p-5">
-        <button onClick={onClose} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-700 z-10">
+        <button onClick={handleClose} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-700 z-10">
           <X size={16} />
         </button>
         <div
@@ -90,7 +77,7 @@ export function TestCasesPanel({ state, testCases, onClose, gradingResult }: Tes
   if (state === "results" && gradingResult && !gradingResult.correct) {
      return (
       <div className="flex flex-col h-full bg-white relative overflow-y-auto scrollbar-hide p-5">
-        <button onClick={onClose} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-700 z-10">
+        <button onClick={handleClose} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-700 z-10">
           <X size={16} />
         </button>
         <div className="border rounded-lg p-4 border-red-200 bg-red-50">
@@ -110,6 +97,16 @@ export function TestCasesPanel({ state, testCases, onClose, gradingResult }: Tes
 
   return (
     <div className="flex flex-col h-full bg-white relative">
+      {(state === "running" || state === "grading") && (
+        <div className="absolute inset-0 bg-white/40 flex items-center justify-center z-50">
+          <div className="flex flex-col items-center gap-3 bg-white px-6 py-4 rounded-xl shadow-xl border border-gray-200">
+            <Loader2 size={24} className="animate-spin text-blue-500" />
+            <div className="font-mono text-xs font-medium text-gray-600">
+              {state === "grading" ? "Grading with AI..." : "Running test cases..."}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between border-b border-gray-200 pr-2">
         <div className="flex gap-1 px-3 pt-3 pb-2 overflow-x-auto">
           {testCases.map((tc, i) => (
@@ -129,7 +126,7 @@ export function TestCasesPanel({ state, testCases, onClose, gradingResult }: Tes
             <Plus size={14} />
           </button>
         </div>
-        <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-700">
+        <button onClick={handleClose} className="p-1 text-gray-400 hover:text-gray-700">
           <X size={16} />
         </button>
       </div>
