@@ -35,8 +35,9 @@ export function extractFunctionName(starterCode: string, language: string): stri
 
   switch (language) {
     case 'python':
-      // Match "def functionName(self, ..."
-      match = starterCode.match(/def\s+(\w+)\s*\(\s*self/)
+      // Match "def functionName(self, ..." after "class Solution"
+      // This avoids matching commented out "__init__" from TreeNode definitions
+      match = starterCode.match(/class\s+Solution[\s\S]*?def\s+(\w+)\s*\(\s*self/)
       break
     case 'java':
       // Match "public ReturnType functionName(..." but skip "class" lines
@@ -88,13 +89,24 @@ export function parseSampleCase(exampleText: string): TestCase | null {
 
   let inputStr = ''
   let expectedStr = ''
+  let currentState: 'input' | 'output' | 'explanation' | null = null
 
   for (const line of lines) {
     const trimmed = line.trim()
     if (trimmed.startsWith('Input:')) {
-      inputStr = trimmed.replace('Input:', '').trim()
+      currentState = 'input'
+      inputStr = trimmed.replace(/^Input:\s*/, '')
     } else if (trimmed.startsWith('Output:')) {
-      expectedStr = trimmed.replace('Output:', '').trim()
+      currentState = 'output'
+      expectedStr = trimmed.replace(/^Output:\s*/, '')
+    } else if (trimmed.startsWith('Explanation:')) {
+      currentState = 'explanation'
+    } else if (trimmed !== '') {
+      if (currentState === 'input') {
+        inputStr += '\n' + line
+      } else if (currentState === 'output') {
+        expectedStr += '\n' + line
+      }
     }
   }
 
@@ -102,5 +114,5 @@ export function parseSampleCase(exampleText: string): TestCase | null {
     return null
   }
 
-  return { input: inputStr, expected: expectedStr }
+  return { input: inputStr.trim(), expected: expectedStr.trim() }
 }

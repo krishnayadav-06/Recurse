@@ -9,10 +9,12 @@
  */
 
 interface HarnessOptions {
+    problemId?: string
     userCode: string
     functionName: string
     inputTypes: string[]
     outputType: string
+    inPlace?: boolean
 }
 
 function getJavaType(type: string): string {
@@ -119,8 +121,28 @@ ${userImports}
 public class Main {
 
     // --- Manual Parsers ---
-    static int parseInt(String s) { return Integer.parseInt(s.trim()); }
-    static long parseLong(String s) { return Long.parseLong(s.trim()); }
+    static int parseInt(String s) {
+        s = s.trim();
+        if (s.length() == 32) {
+            boolean isBinary = true;
+            for (char c : s.toCharArray()) {
+                if (c != '0' && c != '1') { isBinary = false; break; }
+            }
+            if (isBinary) return (int) Long.parseLong(s, 2);
+        }
+        return Integer.parseInt(s);
+    }
+    static long parseLong(String s) {
+        s = s.trim();
+        if (s.length() == 32) {
+            boolean isBinary = true;
+            for (char c : s.toCharArray()) {
+                if (c != '0' && c != '1') { isBinary = false; break; }
+            }
+            if (isBinary) return Long.parseLong(s, 2);
+        }
+        return Long.parseLong(s);
+    }
     static double parseDouble(String s) { return Double.parseDouble(s.trim()); }
     static boolean parseBoolean(String s) { s = s.trim(); return s.equals("true") || s.equals("True") || s.equals("1"); }
     static String parseString(String s) {
@@ -373,20 +395,58 @@ public class Main {
         }
         String inputData = sb.toString();
         
-        Matcher m = Pattern.compile("\\"input\\"\\\\s*:\\\\s*\\"((?:\\\\\\\\\\"|[^\\"])*)\\"").matcher(inputData);
-        while (m.find()) {
-            String tcInput = m.group(1).replace("\\\\\\\"", "\\"");
+        long totalTimeMs = 0;
+        
+        String searchKey = "\\"input\\"";
+        int pos = 0;
+        while (true) {
+            pos = inputData.indexOf(searchKey, pos);
+            if (pos == -1) break;
+            pos += searchKey.length();
+            
+            int colonPos = inputData.indexOf(':', pos);
+            if (colonPos == -1) break;
+            
+            int quoteStart = inputData.indexOf('"', colonPos);
+            if (quoteStart == -1) break;
+            
+            int quoteEnd = quoteStart + 1;
+            while (quoteEnd < inputData.length()) {
+                if (inputData.charAt(quoteEnd) == '"' && inputData.charAt(quoteEnd - 1) != '\\\\') {
+                    break;
+                }
+                quoteEnd++;
+            }
+            
+            if (quoteEnd >= inputData.length()) break;
+            
             try {
+                String tcInput = inputData.substring(quoteStart + 1, quoteEnd);
+                tcInput = tcInput.replace("\\\\\\\"", "\\"");
+                
                 String[] parsedArgs = parseInputString(tcInput);
 ${argDeclarations}
                 
                 Solution sol = new Solution();
+                long startTime = System.nanoTime();
                 ${execLine}
+                long endTime = System.nanoTime();
+                totalTimeMs += (endTime - startTime) / 1000000;
+                
+                if (totalTimeMs > 200000) {
+                    System.out.println("{\\"error\\":\\"Time Limit Exceeded\\"}");
+                    break;
+                }
+                
                 System.out.println(${outputSerializeExpr});
             } catch (Exception e) {
                 System.out.println("{\\"error\\":\\"" + e.getMessage() + "\\"}");
             }
+            
+            pos = quoteEnd + 1;
         }
+
+        System.out.println("[NATIVE_TIME_MS]=" + totalTimeMs + ".000");
     }
 }
 
@@ -395,13 +455,21 @@ class TreeNode {
     int val;
     TreeNode left;
     TreeNode right;
-    TreeNode(int x) { val = x; }
+    TreeNode() {}
+    TreeNode(int val) { this.val = val; }
+    TreeNode(int val, TreeNode left, TreeNode right) {
+        this.val = val;
+        this.left = left;
+        this.right = right;
+    }
 }
 
 class ListNode {
     int val;
     ListNode next;
-    ListNode(int x) { val = x; }
+    ListNode() {}
+    ListNode(int val) { this.val = val; }
+    ListNode(int val, ListNode next) { this.val = val; this.next = next; }
 }
 
 // --- User's Solution Code ---

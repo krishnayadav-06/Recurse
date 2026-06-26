@@ -1,3 +1,6 @@
+import fs from 'fs'
+import path from 'path'
+
 /**
  * Python Harness Generator
  * 
@@ -9,10 +12,12 @@
  */
 
 interface HarnessOptions {
+  problemId?: string
   userCode: string
   functionName: string
   inputTypes: string[]
   outputType: string
+  inPlace?: boolean
 }
 
 /**
@@ -43,7 +48,15 @@ function needsListNode(inputTypes: string[], outputType: string): boolean {
 }
 
 export function generatePythonHarness(options: HarnessOptions): string {
-  const { userCode, functionName, inputTypes, outputType } = options
+  const { problemId, userCode, functionName, inputTypes, outputType } = options
+
+  if (problemId) {
+    const customRunnerPath = path.join(process.cwd(), 'src', 'lib', 'runners', 'custom', 'python', `${problemId}.py`);
+    if (fs.existsSync(customRunnerPath)) {
+      const customTemplate = fs.readFileSync(customRunnerPath, 'utf-8');
+      return customTemplate.replace('${userCode}', userCode);
+    }
+  }
 
   // Build the helpers section
   let helpers = ''
@@ -151,30 +164,69 @@ def serialize_linked_list(head):
   return `import sys
 import json
 import re
+import time
+import collections
+from collections import deque, defaultdict, Counter
+import heapq
+from heapq import heappush, heappop, heapify
+import math
+from math import sqrt, floor, ceil, log, log2, gcd, inf
+import bisect
+import itertools
+import functools
 
 ${helpers}
 
 # --- Helpers for parsing named-parameter input strings ---
+def safe_eval(val_str):
+    # Use json.loads for quoted strings to handle backslashes, newlines, special chars
+    stripped = val_str.strip()
+    # Strip spurious trailing quote that can appear in char[][] test cases
+    if stripped and stripped[-1] == '"' and (not stripped.startswith('"') or stripped.count('"') % 2 != 0):
+        stripped = stripped[:-1].rstrip()
+    if len(stripped) >= 2 and stripped[0] == '"' and stripped[-1] == '"':
+        try:
+            return json.loads(stripped)
+        except Exception:
+            pass
+    # Replace JSON booleans/null with Python equivalents before eval
+    py_str = stripped.replace("null", "None").replace("true", "True").replace("false", "False")
+    try:
+        return eval(py_str)
+    except Exception:
+        # Last resort: try json.loads on the original (handles arrays of strings like [["1","0"]])
+        try:
+            return json.loads(stripped)
+        except Exception:
+            pass
+    return eval(py_str)
+
 def parse_input_string(input_str):
     """
     Parses 'nums = [3,3], target = 6' into a list of Python values.
     Splits on top-level comma+space separating 'name = value' pairs,
-    then evals each value.
+    then safe_eval()s each value.
     """
-    # Split on top-level ', ' that separates named params
-    # We track bracket/paren depth to avoid splitting inside arrays
+    # Split on top-level ',' that separates named params
+    # Track bracket depth and quoted string state
     parts = []
     depth = 0
+    in_string = False
     current = ""
+    prev_ch = ""
     for ch in input_str:
-        if ch in "([{":
-            depth += 1
-        elif ch in ")]}":
-            depth -= 1
+        if ch == '"' and prev_ch != chr(92):
+            in_string = not in_string
+        if not in_string:
+            if ch in "([{":
+                depth += 1
+            elif ch in ")]}":
+                depth -= 1
         current += ch
-        if ch == "," and depth == 0:
+        if ch == "," and depth == 0 and not in_string:
             parts.append(current[:-1].strip())
             current = ""
+        prev_ch = ch
     if current.strip():
         parts.append(current.strip())
     
@@ -183,9 +235,19 @@ def parse_input_string(input_str):
     for part in parts:
         eq_idx = part.index("=")
         val_str = part[eq_idx + 1:].strip()
-        # Replace 'null' with None, 'true'/'false' with Python booleans
-        val_str = val_str.replace("null", "None").replace("true", "True").replace("false", "False")
-        values.append(eval(val_str))
+        
+        ${problemId === 'reverse-bits' ? `
+        # Check for 32-bit binary string (reverse-bits edge case)
+        stripped_quotes = val_str.strip('"').strip("'")
+        if len(stripped_quotes) == 32 and all(c in '01' for c in stripped_quotes):
+            val = int(stripped_quotes, 2)
+            # Cast to signed 32-bit integer
+            val = (val & 0xffffffff) - 0x100000000 if val & 0x80000000 else val
+            values.append(val)
+            continue
+        ` : ''}
+
+        values.append(safe_eval(val_str))
     return values
 
 # --- User's Solution Code ---
@@ -195,17 +257,59 @@ ${userCode}
 
 # --- Main Execution Loop ---
 if __name__ == "__main__":
-    test_cases = json.loads(sys.stdin.read())
+    input_data = sys.stdin.read()
     sol = Solution()
+    total_execution_time_ms = 0
 
-    for tc in test_cases:
+    search_key = '"input"'
+    pos = 0
+    while True:
+        pos = input_data.find(search_key, pos)
+        if pos == -1:
+            break
+        pos += len(search_key)
+        
+        colon_pos = input_data.find(':', pos)
+        if colon_pos == -1:
+            break
+            
+        quote_start = input_data.find('"', colon_pos)
+        if quote_start == -1:
+            break
+            
+        quote_end = quote_start + 1
+        while quote_end < len(input_data):
+            if input_data[quote_end] == '"' and input_data[quote_end - 1] != '\\\\':
+                break
+            quote_end += 1
+            
+        if quote_end >= len(input_data):
+            break
+            
         try:
-            parsed_args = parse_input_string(tc["input"])
+            tc_input = input_data[quote_start + 1 : quote_end]
+            # Unescape quotes and newlines by parsing it as a JSON string
+            tc_input_json_str = '"' + tc_input + '"'
+            tc_input = json.loads(tc_input_json_str)
+            
+            parsed_args = parse_input_string(tc_input)
 ${argParsers}
+            start_time = time.perf_counter()
             ${execLine}
+            end_time = time.perf_counter()
+            total_execution_time_ms += (end_time - start_time) * 1000
+            
+            if total_execution_time_ms > 200000:
+                print('{"error":"Time Limit Exceeded"}')
+                break
+                
             output = ${outputSerializer}
-            print(json.dumps(output))
+            print(json.dumps(output, separators=(',', ':')))
         except Exception as e:
-            print(json.dumps({"error": str(e)}))
+            print(json.dumps({"error": str(e)}, separators=(',', ':')))
+            
+        pos = quote_end + 1
+
+    print(f'[NATIVE_TIME_MS]={total_execution_time_ms:.3f}')
 `
 }
