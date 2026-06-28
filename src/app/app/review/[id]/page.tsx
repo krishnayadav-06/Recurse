@@ -42,20 +42,37 @@ function parseSampleCase(raw: SampleCase): { input: string; output: string; expl
 
   let input = "";
   let output = "";
-  let explanation: string | undefined;
+  let explanation = "";
+  let currentState: "input" | "output" | "explanation" | null = null;
 
   for (const line of lines) {
     const trimmed = line.trim();
     if (trimmed.startsWith("Input:")) {
+      currentState = "input";
       input = trimmed.replace(/^Input:\s*/, "");
     } else if (trimmed.startsWith("Output:")) {
+      currentState = "output";
       output = trimmed.replace(/^Output:\s*/, "");
     } else if (trimmed.startsWith("Explanation:")) {
+      currentState = "explanation";
       explanation = trimmed.replace(/^Explanation:\s*/, "");
+    } else if (trimmed !== "") {
+      if (currentState === "input") {
+        input += "\n" + line;
+      } else if (currentState === "output") {
+        output += "\n" + line;
+      } else if (currentState === "explanation") {
+        explanation += "\n" + line;
+      }
     }
   }
 
-  return { input, output, explanation, images: raw.images };
+  return { 
+    input: input.trim(), 
+    output: output.trim(), 
+    explanation: explanation.trim() || undefined, 
+    images: raw.images 
+  };
 }
 
 /**
