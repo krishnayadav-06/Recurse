@@ -1,4 +1,6 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.join(process.cwd(), '.env.local') });
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -40,7 +42,7 @@ async function runValidation() {
           fetch('http://localhost:3000/api/execute', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ problemId: prob.id, language: lang, action: 'run', code })
+            body: JSON.stringify({ problemId: prob.id, language: lang, action: 'submit', code })
           })
             .then(res => res.json())
             .then(data => {
