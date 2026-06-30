@@ -1,46 +1,54 @@
+# ─── Dependencies ─────────────────────────────────────────────────────────────
 node_modules/
-.next/
-.env*
-*.md
-!README.md
+.pnpm-store
 .skills-lock.json
 skills-lock.json
-scripts/seed.ts
+
+# ─── Next.js & Build ──────────────────────────────────────────────────────────
+.next/
+out/
+build/
+.vercel/
+next-env.d.ts
 *.tsbuildinfo
-data/
-scratch/
-audit.json
+
+# ─── Environment ──────────────────────────────────────────────────────────────
+.env*
+
+# ─── OS & Editor ──────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 Desktop.ini
-next-env.d.ts
+.vscode/
+.idea/
 
+# ─── Testing & Linting ────────────────────────────────────────────────────────
+coverage/
+.eslintcache
+audit.json
 
-# Runner temp files
+# ─── Documentation ────────────────────────────────────────────────────────────
+*.md
+!README.md
+# ─── Custom App Data ──────────────────────────────────────────────────────────
+data/
+scratch/
+
+# ─── Code Runner Temp Files ───────────────────────────────────────────────────
 *.exe
 *.out
 *.class
 __pycache__/
 *.pyc
 
-# Root-level testing/scratch scripts
+# ─── Root-Level Scratch Scripts ───────────────────────────────────────────────
 /*.cpp
 /*.java
 /*.py
 /*.js
 
-# Standard Node.js & Next.js ignores
+# ─── Logs ─────────────────────────────────────────────────────────────────────
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-.pnpm-store
-
-# Build & deployment
-build/
-out/
-.vercel/
-
-# Testing & linting
-coverage/
-.eslintcache

@@ -1,5 +1,5 @@
 {
-  "name": "Recurse",
+  "name": "recurse",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/google-one-tap": "^1.2.7",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
