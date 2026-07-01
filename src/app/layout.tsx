@@ -4,7 +4,7 @@ import { GSAPRefresh } from "../components/GSAPRefresh";
 import { AuthModal } from "../components/AuthModal";
 
 export const metadata: Metadata = {
-  title: "Recurse - Spaced Repetition for LeetCode",
+  title: "Recurse | Spaced Repetition for LeetCode",
   description: "Recurse schedules your LeetCode reviews using spaced repetition - so you stop re-solving the same problems from scratch.",
 };
 

@@ -4,8 +4,15 @@
 
 @layer base {
   html {
-    scrollbar-gutter: stable;
+    color-scheme: light;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
+
+  html::-webkit-scrollbar {
+    display: none;
+  }
+
   body {
     background-color: theme('colors.surface');
     color: theme('colors.ink');
@@ -13,10 +20,12 @@
 }
 
 @layer utilities {
+
   /* Magnetic scale transition for buttons */
   .magnetic-hover {
     transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
+
   .magnetic-hover:hover {
     transform: scale(1.03);
   }
@@ -25,9 +34,12 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
   /* Hide scrollbar for IE, Edge and Firefox */
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
 }
