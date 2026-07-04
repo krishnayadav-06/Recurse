@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { ActivityPanel } from './ActivityPanel';
 import { Eye, EyeOff } from 'lucide-react';
 
-export function ActivityContainer() {
+export function ActivityContainer({ reviewLogs = [], userProblems = [] }: { reviewLogs?: any[], userProblems?: any[] }) {
   const [isHidden, setIsHidden] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
@@ -50,7 +50,7 @@ export function ActivityContainer() {
         </button>
       </div>
 
-      {!isHidden && <ActivityPanel />}
+      {!isHidden && <ActivityPanel reviewLogs={reviewLogs} userProblems={userProblems} />}
     </div>
   );
 }

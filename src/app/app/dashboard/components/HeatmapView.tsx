@@ -1,5 +1,14 @@
-export function HeatmapView() {
+export function HeatmapView({ reviewLogs = [] }: { reviewLogs?: any[] }) {
   const today = new Date();
+
+  // Create a map of date string (YYYY-MM-DD) to count
+  const activityMap: Record<string, number> = {};
+  reviewLogs.forEach(log => {
+    const d = new Date(log.reviewed_at);
+    // adjust to local date string YYYY-MM-DD
+    const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    activityMap[dateKey] = (activityMap[dateKey] || 0) + 1;
+  });
 
   // Start from the 1st day of the month, 11 months ago
   const startDate = new Date(today.getFullYear(), today.getMonth() - 11, 1);
@@ -66,23 +75,29 @@ export function HeatmapView() {
                           // Empty placeholder to maintain grid alignment
                           return <div key={dayIdx} className="w-3 h-3" />;
                         }
-                        // Mock random activity levels 0-4 for visual effect
-                        const rand = Math.random();
+                        
+                        const dateKey = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+                        const count = activityMap[dateKey] || 0;
+                        
                         let level = 0;
-                        if (rand > 0.4) level = 1;
-                        if (rand > 0.7) level = 2;
-                        if (rand > 0.85) level = 3;
-                        if (rand > 0.95) level = 4;
+                        if (count > 0) level = 1;
+                        if (count > 2) level = 2;
+                        if (count > 5) level = 3;
+                        if (count > 10) level = 4;
 
+                        // Using opacity for intensity
                         let colorClass = 'bg-gray-100';
-                        if (level > 0) colorClass = 'bg-black';
+                        if (level === 1) colorClass = 'bg-gray-900 opacity-25';
+                        if (level === 2) colorClass = 'bg-gray-900 opacity-50';
+                        if (level === 3) colorClass = 'bg-gray-900 opacity-75';
+                        if (level === 4) colorClass = 'bg-gray-900';
 
                         // Render actual day square
                         return (
                           <div
                             key={dayIdx}
                             className={`w-3 h-3 rounded-[2px] ${colorClass}`}
-                            title={`${day.toDateString()}: ${level * 3} reviews`}
+                            title={`${day.toDateString()}: ${count} reviews`}
                           />
                         );
                       })}
@@ -100,9 +115,6 @@ export function HeatmapView() {
       </div>
       <div className="text-xs text-gray-400 mt-1 md:hidden">
         Scroll to see full year &rarr;
-      </div>
-      <div className="text-xs text-gray-400 text-center mt-2">
-        Activity tracking starts on your first review.
       </div>
     </div>
   );

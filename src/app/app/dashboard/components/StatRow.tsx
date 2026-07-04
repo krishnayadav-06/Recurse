@@ -1,31 +1,48 @@
 import { Target, Crown, Flame, Timer } from 'lucide-react';
 
-export function StatRow() {
+export function StatRow({ userProblems = [] }: { userProblems?: any[] }) {
+  const reviewed = userProblems.length;
+  const mastered = userProblems.filter(p => p.is_mastered).length;
+  const inProgress = Math.max(0, reviewed - mastered);
+  
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const dueToday = userProblems.filter(p => {
+    if (!p.due || p.is_mastered) return false;
+    const dueDate = new Date(p.due);
+    const dueDay = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+    const daysFromNow = Math.round((dueDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Count as due if it is today or overdue (daysFromNow <= 0)
+    return daysFromNow <= 0;
+  }).length;
+
   const stats = [
     { 
       label: 'Problems reviewed', 
-      value: '243', 
+      value: reviewed.toString(), 
       icon: Target,
       iconBg: 'bg-gray-100',
       iconColor: 'text-gray-900',
     },
     { 
       label: 'Mastered', 
-      value: '118', 
+      value: mastered.toString(), 
       icon: Crown,
       iconBg: 'bg-gray-100',
       iconColor: 'text-gray-900',
     },
     { 
       label: 'In progress', 
-      value: '45', 
+      value: inProgress.toString(), 
       icon: Flame,
       iconBg: 'bg-gray-100',
       iconColor: 'text-gray-900',
     },
     { 
-      label: 'Due today', 
-      value: '12', 
+      label: 'Due', 
+      value: dueToday.toString(), 
       icon: Timer,
       iconBg: 'bg-gray-100',
       iconColor: 'text-gray-900',

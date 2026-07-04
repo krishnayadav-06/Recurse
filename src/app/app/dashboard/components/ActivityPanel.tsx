@@ -6,7 +6,7 @@ import { CalendarView } from './CalendarView';
 
 type ViewMode = 'heatmap' | 'calendar';
 
-export function ActivityPanel() {
+export function ActivityPanel({ reviewLogs = [], userProblems = [] }: { reviewLogs?: any[], userProblems?: any[] }) {
   const [view, setView] = useState<ViewMode>('calendar');
   const [isClient, setIsClient] = useState(false);
 
@@ -30,7 +30,7 @@ export function ActivityPanel() {
         <div className="flex items-baseline">
           <h2 className="text-sm font-semibold text-gray-900">Activity</h2>
           <span className="text-xs text-gray-400 ml-2 font-mono">
-            {view === 'heatmap' ? '342 reviews in the last year' : 'Upcoming reviews'}
+            {view === 'heatmap' ? `${reviewLogs.length} reviews historically` : 'Upcoming reviews'}
           </span>
         </div>
         
@@ -62,8 +62,8 @@ export function ActivityPanel() {
 
       {/* Content */}
       <div className="min-h-[200px] transition-opacity duration-150">
-        {isClient && view === 'heatmap' && <HeatmapView />}
-        {isClient && view === 'calendar' && <CalendarView />}
+        {isClient && view === 'heatmap' && <HeatmapView reviewLogs={reviewLogs} />}
+        {isClient && view === 'calendar' && <CalendarView userProblems={userProblems} />}
       </div>
     </div>
   );

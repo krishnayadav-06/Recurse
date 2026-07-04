@@ -4,7 +4,12 @@ const nextConfig = {
     '*.trycloudflare.com',
     '*.localtunnel.me',
     '*.ngrok-free.app'
-  ]
+  ],
+  experimental: {
+    staleTimes: {
+      dynamic: 0,
+    },
+  },
 };
 
 export default nextConfig;
