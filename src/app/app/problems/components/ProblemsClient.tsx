@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Plus } from "lucide-react";
-import { UserDropdown } from "../../../../components/UserDropdown";
 import { Dropdown } from "./ui/Dropdown";
 import { FilterChip } from "./ui/FilterChip";
 import { PatternSelector } from "./PatternSelector";
@@ -129,34 +128,7 @@ export function ProblemsClient({ initialProblems, initialStatusMap }: ProblemsCl
   const isDefaultSort = !sortField && (list === "all" || list === "neetcode-150");
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      {/* Shell nav */}
-      <header className="sticky top-0 z-[60] h-14 border-b border-gray-200 flex items-center justify-between px-6 shrink-0 bg-white">
-        <div className="flex items-center gap-6">
-          <span className="font-semibold text-gray-900 cursor-pointer" onClick={() => router.push("/")}>
-            Recurse
-          </span>
-          <nav className="hidden md:flex gap-4">
-            <span 
-              className="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
-              onClick={() => router.push("/app/dashboard")}
-            >
-              Dashboard
-            </span>
-            <span 
-              className="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
-              onClick={() => router.push("/app/queue")}
-            >
-              Queue
-            </span>
-            <span className="text-sm text-gray-900 font-medium cursor-pointer">
-              Problems
-            </span>
-          </nav>
-        </div>
-        <UserDropdown />
-      </header>
-
+    <>
       {/* Page content */}
       <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex-1 flex flex-col pt-8 pb-12">
         <StudyPlanCards 
@@ -236,6 +208,6 @@ export function ProblemsClient({ initialProblems, initialStatusMap }: ProblemsCl
           />
         </div>
       </div>
-    </div>
+    </>
   );
 }

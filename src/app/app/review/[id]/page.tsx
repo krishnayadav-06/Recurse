@@ -127,10 +127,12 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const [language, setLanguage] = useState("python");
   const [code, setCode] = useState("");
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("two-column");
-  const [testCaseState, setTestCaseState] = useState<"hidden" | "running" | "grading" | "results" | "graded">("hidden");
+  const [testCaseState, setTestCaseState] = useState<"hidden" | "running" | "results">("hidden");
+  const [submissionState, setSubmissionState] = useState<"idle" | "submitting" | "graded">("idle");
   const [panelTab, setPanelTab] = useState<"description" | "solutions" | "submissions">("description");
   const [testCases, setTestCases] = useState<TestCase[]>([]);
-  const [gradingResult, setGradingResult] = useState<{ correct: boolean; message: string; solution?: string } | undefined>();
+  const [gradingResult, setGradingResult] = useState<{ correct: boolean; message: string; solution?: string; executionTimeMs?: number } | undefined>();
+  const [isMasterySuggested, setIsMasterySuggested] = useState(false);
 
   /* ---- Fetch problem on mount ---- */
   useEffect(() => {
@@ -154,6 +156,21 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
       const row = data as ProblemRow;
       setProblem(row);
+
+      // Check for mastery heuristic
+      const { data: userProb } = await supabase
+        .from("user_problems")
+        .select("reps, stability, scheduled_days")
+        .eq("problem_id", id)
+        .maybeSingle();
+
+      if (userProb) {
+        if (userProb.scheduled_days >= 60 || (userProb.reps >= 4 && userProb.stability >= 30)) {
+          setIsMasterySuggested(true);
+        }
+      }
+      
+
 
       // Initialize test cases from sample_cases
       setTestCases(buildTestCases(row.sample_cases));
@@ -236,8 +253,9 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
   const handleSubmit = async () => {
     if (!problem) return;
-    setTestCaseState("grading");
+    setSubmissionState("submitting");
     setPanelTab("submissions");
+    setTestCaseState("hidden");
 
     try {
       const response = await fetch("/api/execute", {
@@ -253,7 +271,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
       const data = await response.json();
 
-      setTestCaseState("graded");
+      setSubmissionState("graded");
 
       if (!response.ok || data.error) {
         setGradingResult({
@@ -267,6 +285,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         setGradingResult({
           correct: true,
           message: `Passed all ${data.totalCases} test cases!`,
+          executionTimeMs: data.executionTimeMs,
         });
       } else {
         setGradingResult({
@@ -274,13 +293,60 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
           message: `Failed on test case ${data.failedCaseIndex + 1}. Expected: ${data.failedCase.expected}, Actual: ${data.failedCase.actual}`,
           solution: `Input: ${data.failedCase.input}\nExpected: ${data.failedCase.expected}\nActual: ${data.failedCase.actual}`
         });
+
+        // Auto-rate as Again (1) on failure
+        fetch("/api/rate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            problemId: problem.id,
+            rating: 1, // Again
+            code,
+            language,
+            executionTimeMs: data.executionTimeMs,
+            passed: false
+          })
+        }).catch(console.error);
       }
     } catch (err: any) {
-      setTestCaseState("graded");
+      setSubmissionState("graded");
       setGradingResult({
         correct: false,
         message: err.message || "Failed to connect to execution server.",
       });
+    }
+  };
+
+  const handleRatingConfirm = async (ratingLabel: string) => {
+    if (!problem || !gradingResult) return;
+    
+    // Map string to FSRS rating number (1-4, 5 for Mastered)
+    const ratingMap: Record<string, number> = {
+      "Again": 1,
+      "Hard": 2,
+      "Good": 3,
+      "Easy": 4,
+      "Mastered": 5
+    };
+    const ratingValue = ratingMap[ratingLabel] || 3;
+
+    try {
+      await fetch("/api/rate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          problemId: problem.id,
+          rating: ratingValue,
+          code,
+          language,
+          executionTimeMs: gradingResult.executionTimeMs,
+          passed: true
+        })
+      });
+      // Auto-advance to queue
+      router.push("/app/queue");
+    } catch (err) {
+      console.error("Failed to save rating:", err);
     }
   };
 
@@ -368,7 +434,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         setLanguage={setLanguage}
         onRun={handleRun}
         onSubmit={handleSubmit}
-        isSubmitting={testCaseState === "grading"}
+        isSubmitting={submissionState === "submitting"}
       />
 
       <ResizableWorkspace
@@ -385,7 +451,11 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             tags={tags}
             activeTab={panelTab}
             onTabChange={setPanelTab}
-            isSubmitting={testCaseState === "grading"}
+            submissionState={submissionState}
+            gradingResult={gradingResult}
+            onRatingConfirm={handleRatingConfirm}
+            isMasterySuggested={isMasterySuggested}
+            onClearSubmission={() => setSubmissionState("idle")}
           />
         }
         editorPanel={
@@ -393,7 +463,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             language={language}
             code={code}
             onChange={(val) => setCode(val || "")}
-            isSubmitting={testCaseState === "grading"}
+            isSubmitting={submissionState === "submitting"}
             onRun={handleRun}
             onSubmit={handleSubmit}
           />

@@ -1,60 +1,74 @@
+import { createClient } from '../../../utils/supabase/server';
 import { PageHeader } from './components/PageHeader';
 import { StatRow } from './components/StatRow';
 import { ActivityContainer } from './components/ActivityContainer';
 import { BreakdownPanel } from './components/BreakdownPanel';
 import { RecentActivity } from './components/RecentActivity';
-import { UserDropdown } from '../../../components/UserDropdown';
 import { Footer } from '../../../components/landing/Footer';
-import Link from 'next/link';
 
-export default function DashboardPage() {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+
+export default async function DashboardPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let userProblems = [];
+  let reviewLogs = [];
+
+  if (user) {
+    const [upRes, rlRes] = await Promise.all([
+      supabase
+        .from("user_problems")
+        .select(`
+          problem_id, due, is_mastered, reps,
+          problems (title, difficulty, patterns)
+        `)
+        .eq("user_id", user.id),
+      supabase
+        .from("review_logs")
+        .select(`
+          id, reviewed_at, execution_passed, rating, review_duration_ms,
+          problems (title)
+        `)
+        .eq("user_id", user.id)
+        .order("reviewed_at", { ascending: false })
+        .limit(100)
+    ]);
+    
+    if (upRes.data) userProblems = upRes.data;
+    if (rlRes.data) reviewLogs = rlRes.data;
+  }
+
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      {/* Shell nav */}
-      <header className="sticky top-0 z-[60] h-14 border-b border-gray-200 flex items-center justify-between px-6 shrink-0 bg-white">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="font-semibold text-gray-900 cursor-pointer">
-            Recurse
-          </Link>
-          <nav className="hidden md:flex gap-4">
-            <Link href="/app/dashboard" className="text-sm text-gray-900 font-medium cursor-pointer">
-              Dashboard
-            </Link>
-            <Link href="/app/queue" className="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer">
-              Queue
-            </Link>
-            <Link href="/app/problems" className="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer">
-              Problems
-            </Link>
-          </nav>
-        </div>
-        <UserDropdown />
-      </header>
-
+    <>
       {/* Page content */}
       <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-        <PageHeader />
+        <PageHeader userName={userName} userProblems={userProblems} />
 
         <div className="py-6 border-y border-gray-200 mb-6">
-          <StatRow />
+          <StatRow userProblems={userProblems} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
-            <ActivityContainer />
-            <RecentActivity />
+            <ActivityContainer reviewLogs={reviewLogs} userProblems={userProblems} />
+            <RecentActivity reviewLogs={reviewLogs} />
           </div>
 
           {/* Right Column */}
           <div className="lg:col-span-1">
-            <div className="sticky top-6">
-              <BreakdownPanel />
+            <div className="sticky top-20">
+              <BreakdownPanel userProblems={userProblems} />
             </div>
           </div>
         </div>
       </div>
       <Footer />
-    </div>
+    </>
   );
 }
