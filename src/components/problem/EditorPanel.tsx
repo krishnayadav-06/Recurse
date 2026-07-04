@@ -63,7 +63,11 @@ export function EditorPanel({
             bracketPairColorization: { enabled: true },
             fontSize: 14,
             fontFamily: 'Menlo, Monaco, Consolas, "Courier New", monospace',
-            lineHeight: 22,
+            lineHeight: 19,
+            lineNumbersMinChars: 3,
+            glyphMargin: true,
+            folding: true,
+            padding: { top: 8 },
           }}
         />
       </div>

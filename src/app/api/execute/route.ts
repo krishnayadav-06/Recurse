@@ -614,51 +614,7 @@ export async function POST(request: NextRequest) {
 
     const passed = passedCases === testCases.length
 
-    if (action === 'submit') {
-      try {
-        const serverClient = await createServerClient()
-        let { data: { user } } = await serverClient.auth.getUser()
-        if (!user) user = { id: '741c8e8b-6ce8-4f97-a04e-ce7470734f13' } as any;
-        
-        if (user) {
-          await serverClient.from('review_logs').insert({
-            user_id: user.id,
-            problem_id: problemId,
-            rating: passed ? 3 : 1,
-            execution_passed: passed,
-            review_duration_ms: executionTimeMs,
-            code: code,
-            language: language,
-            reviewed_at: new Date().toISOString()
-          })
 
-          // Update user_problems without altering FSRS state (just marking last_review)
-          const { data: existing } = await serverClient
-            .from('user_problems')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('problem_id', problemId)
-            .single()
-
-          if (existing) {
-            await serverClient.from('user_problems').update({
-              last_review: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }).eq('id', existing.id)
-          } else {
-            await serverClient.from('user_problems').insert({
-              user_id: user.id,
-              problem_id: problemId,
-              last_review: new Date().toISOString(),
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-          }
-        }
-      } catch (err) {
-        console.error("Error logging submission to Supabase:", err)
-      }
-    }
 
     return NextResponse.json({
       passed,

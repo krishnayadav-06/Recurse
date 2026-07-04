@@ -17,7 +17,7 @@ interface TestCasesPanelProps {
   state: TestCaseState;
   testCases: TestCase[];
   onClose: () => void;
-  gradingResult?: { correct: boolean; message: string; solution?: string };
+  gradingResult?: { correct: boolean; message: string; solution?: string; executionTimeMs?: number };
 }
 
 export function TestCasesPanel({ state, testCases, onClose, gradingResult }: TestCasesPanelProps) {
@@ -32,45 +32,6 @@ export function TestCasesPanel({ state, testCases, onClose, gradingResult }: Tes
     }
   };
 
-  if (state === "graded" && gradingResult) {
-    return (
-      <div className="flex flex-col h-full bg-white relative overflow-y-auto scrollbar-hide p-5">
-        <button onClick={handleClose} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-700 z-10">
-          <X size={16} />
-        </button>
-        <div
-          className={`border rounded-lg p-4 ${
-            gradingResult.correct ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"
-          }`}
-        >
-          <div
-            className={`font-medium flex items-center gap-2 ${
-              gradingResult.correct ? "text-green-700" : "text-red-700"
-            }`}
-          >
-            {gradingResult.correct ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
-            {gradingResult.correct ? "Looks correct" : "Not quite"}
-          </div>
-          {gradingResult.message && (
-            <div className="mt-1 text-sm opacity-80">{gradingResult.message}</div>
-          )}
-          {!gradingResult.correct && gradingResult.solution && (
-            <button 
-              onClick={() => setShowSolution(!showSolution)}
-              className="mt-2 text-xs font-medium border border-gray-300 rounded px-2 py-1 bg-white hover:bg-gray-50 transition-colors"
-            >
-              {showSolution ? "Hide reference solution ↑" : "See reference solution ↓"}
-            </button>
-          )}
-        </div>
-        {!gradingResult.correct && gradingResult.solution && showSolution && (
-          <div className="mt-4 bg-gray-950 rounded-lg p-4 font-mono text-xs text-green-400 overflow-x-auto">
-            <pre>{gradingResult.solution}</pre>
-          </div>
-        )}
-      </div>
-    );
-  }
 
   // Handle global run errors (e.g., compilation error, crash before outputting JSON)
   // We can pass this error via gradingResult when state is "results"
@@ -97,12 +58,12 @@ export function TestCasesPanel({ state, testCases, onClose, gradingResult }: Tes
 
   return (
     <div className="flex flex-col h-full bg-white relative">
-      {(state === "running" || state === "grading") && (
+      {(state === "running") && (
         <div className="absolute inset-0 bg-white/40 flex items-center justify-center z-50">
           <div className="flex flex-col items-center gap-3 bg-white px-6 py-4 rounded-xl shadow-xl border border-gray-200">
             <Loader2 size={24} className="animate-spin text-blue-500" />
             <div className="font-mono text-xs font-medium text-gray-600">
-              {state === "grading" ? "Grading with AI..." : "Running test cases..."}
+              Running test cases...
             </div>
           </div>
         </div>
