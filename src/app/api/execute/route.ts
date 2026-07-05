@@ -233,6 +233,21 @@ function createAnonClient() {
  */
 export async function POST(request: NextRequest) {
   try {
+    // --- Authenticate the user ---
+    const serverClient = await createServerClient()
+    let { data: { user } } = await serverClient.auth.getUser()
+
+    if (!user && process.env.NODE_ENV === 'development' && process.env.DEV_USER_ID) {
+      user = { id: process.env.DEV_USER_ID } as any
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Authentication required. Please sign in to execute code.' },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
     const { problemId, code, language, action } = body
 
@@ -600,6 +615,29 @@ export async function POST(request: NextRequest) {
     // Round accumulated native time up and enforce a 1ms floor for clean display
     executionTimeMs = Math.max(1, Math.ceil(executionTimeMs))
 
+    const passed = !globalError && passedCases === testCases.length
+
+    let reviewLogId: string | undefined;
+
+    if (action === 'submit') {
+      const { data: logData, error: logError } = await serverClient.from('review_logs').insert({
+        user_id: user.id,
+        problem_id: problemId,
+        rating: null,
+        execution_passed: passed,
+        review_duration_ms: executionTimeMs,
+        code,
+        language,
+        reviewed_at: new Date().toISOString()
+      }).select('id').single();
+
+      if (!logError && logData) {
+        reviewLogId = logData.id;
+      } else {
+        console.error("Failed to insert review_log:", logError);
+      }
+    }
+
     if (globalError) {
       return NextResponse.json({
         passed: false,
@@ -609,12 +647,9 @@ export async function POST(request: NextRequest) {
         failedCase,
         error: globalError,
         executionTimeMs,
+        reviewLogId,
       } satisfies ExecutionResult)
     }
-
-    const passed = passedCases === testCases.length
-
-
 
     return NextResponse.json({
       passed,
@@ -624,6 +659,7 @@ export async function POST(request: NextRequest) {
       failedCase,
       error: !passed ? 'Test failed' : null,
       executionTimeMs,
+      reviewLogId,
     } satisfies ExecutionResult)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'

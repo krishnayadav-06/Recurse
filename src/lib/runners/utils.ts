@@ -21,6 +21,7 @@ export interface ExecutionResult {
   } | null
   error: string | null
   executionTimeMs: number
+  reviewLogId?: string
 }
 
 /**

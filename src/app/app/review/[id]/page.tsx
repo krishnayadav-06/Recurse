@@ -131,7 +131,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   const [submissionState, setSubmissionState] = useState<"idle" | "submitting" | "graded">("idle");
   const [panelTab, setPanelTab] = useState<"description" | "solutions" | "submissions">("description");
   const [testCases, setTestCases] = useState<TestCase[]>([]);
-  const [gradingResult, setGradingResult] = useState<{ correct: boolean; message: string; solution?: string; executionTimeMs?: number } | undefined>();
+  const [gradingResult, setGradingResult] = useState<{ correct: boolean; message: string; solution?: string; executionTimeMs?: number; reviewLogId?: string } | undefined>();
   const [isMasterySuggested, setIsMasterySuggested] = useState(false);
 
   /* ---- Fetch problem on mount ---- */
@@ -286,27 +286,27 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
           correct: true,
           message: `Passed all ${data.totalCases} test cases!`,
           executionTimeMs: data.executionTimeMs,
+          reviewLogId: data.reviewLogId,
         });
       } else {
         setGradingResult({
           correct: false,
           message: `Failed on test case ${data.failedCaseIndex + 1}. Expected: ${data.failedCase.expected}, Actual: ${data.failedCase.actual}`,
-          solution: `Input: ${data.failedCase.input}\nExpected: ${data.failedCase.expected}\nActual: ${data.failedCase.actual}`
+          solution: `Input: ${data.failedCase.input}\nExpected: ${data.failedCase.expected}\nActual: ${data.failedCase.actual}`,
+          reviewLogId: data.reviewLogId,
         });
 
         // Auto-rate as Again (1) on failure
-        fetch("/api/rate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            problemId: problem.id,
-            rating: 1, // Again
-            code,
-            language,
-            executionTimeMs: data.executionTimeMs,
-            passed: false
-          })
-        }).catch(console.error);
+        if (data.reviewLogId) {
+          fetch("/api/rate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              reviewLogId: data.reviewLogId,
+              rating: 1, // Again
+            })
+          }).catch(console.error);
+        }
       }
     } catch (err: any) {
       setSubmissionState("graded");
@@ -318,7 +318,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   };
 
   const handleRatingConfirm = async (ratingLabel: string) => {
-    if (!problem || !gradingResult) return;
+    if (!problem || !gradingResult || !gradingResult.reviewLogId) return;
     
     // Map string to FSRS rating number (1-4, 5 for Mastered)
     const ratingMap: Record<string, number> = {
@@ -335,12 +335,8 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          problemId: problem.id,
+          reviewLogId: gradingResult.reviewLogId,
           rating: ratingValue,
-          code,
-          language,
-          executionTimeMs: gradingResult.executionTimeMs,
-          passed: true
         })
       });
       // Auto-advance to queue

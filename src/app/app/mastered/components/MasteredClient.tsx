@@ -122,21 +122,33 @@ function GhostCard({ index }: { index: number }) {
 
 // ─── Ghost Empty State ────────────────────────────────────────────────────────
 
-function GhostEmptyState() {
+function GhostEmptyState({ isAuthenticated }: { isAuthenticated?: boolean }) {
+  const title = isAuthenticated ? "No mastered problems yet." : "Log in to view your mastered problems.";
+  const desc = isAuthenticated
+    ? 'When you find a problem too easy, mark it as "Don\'t track" after solving to move it here.'
+    : "Track your progress and see which problems you've completely mastered.";
+
   return (
     <div className="space-y-2">
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm px-5 py-5 text-center">
-        <p className="text-sm font-medium text-gray-700">No mastered problems yet.</p>
-        <p className="text-xs text-gray-400 mt-1">
-          When you find a problem too easy, mark it as "Don't track" after solving to move it here.
-        </p>
+        <p className="text-sm font-medium text-gray-700">{title}</p>
+        <p className="text-xs text-gray-400 mt-1">{desc}</p>
         <div className="mt-4">
-          <Link
-            href="/app/problems"
-            className="border border-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm hover:bg-gray-50 transition-colors duration-150 inline-block"
-          >
-            Browse problems →
-          </Link>
+          {!isAuthenticated ? (
+            <Link
+              href="?auth=login"
+              className="bg-gray-900 text-white rounded-lg px-10 py-1.5 text-sm font-medium hover:bg-gray-800 hover:shadow-md transition-all duration-200 inline-block"
+            >
+              Sign in
+            </Link>
+          ) : (
+            <Link
+              href="/app/problems"
+              className="border border-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm hover:bg-gray-50 transition-colors duration-150 inline-block"
+            >
+              Browse problems →
+            </Link>
+          )}
         </div>
       </div>
 
@@ -149,7 +161,13 @@ function GhostEmptyState() {
   );
 }
 
-export function MasteredClient({ initialProblems }: { initialProblems: MasteredProblem[] }) {
+export function MasteredClient({
+  initialProblems,
+  isAuthenticated = true
+}: {
+  initialProblems: MasteredProblem[];
+  isAuthenticated?: boolean;
+}) {
   const router = useRouter();
   const [problems, setProblems] = useState<MasteredProblem[]>(initialProblems);
 
@@ -169,7 +187,6 @@ export function MasteredClient({ initialProblems }: { initialProblems: MasteredP
         body: JSON.stringify({
           problemId,
           rating: 1, // Again
-          passed: true
         })
       });
       if (res.ok) {
@@ -182,7 +199,7 @@ export function MasteredClient({ initialProblems }: { initialProblems: MasteredP
       router.refresh(); // Revert on failure
     }
   };
-  
+
   return (
     <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
       <div className="flex items-end justify-between mb-6">
@@ -197,13 +214,13 @@ export function MasteredClient({ initialProblems }: { initialProblems: MasteredP
       </div>
 
       {problems.length === 0 ? (
-        <GhostEmptyState />
+        <GhostEmptyState isAuthenticated={isAuthenticated} />
       ) : (
         <div className="space-y-2">
           {problems.map((problem) => (
-            <MasteredCard 
-              key={problem.id} 
-              problem={problem} 
+            <MasteredCard
+              key={problem.id}
+              problem={problem}
               onRestore={handleRestore}
             />
           ))}

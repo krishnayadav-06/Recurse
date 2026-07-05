@@ -19,7 +19,7 @@ interface ProblemPanelProps {
   onTabChange: (tab: "description" | "solutions" | "submissions") => void;
   isSubmitting?: boolean;
   submissionState?: "idle" | "submitting" | "graded";
-  gradingResult?: { correct: boolean; message: string; solution?: string; executionTimeMs?: number };
+  gradingResult?: { correct: boolean; message: string; solution?: string; executionTimeMs?: number; reviewLogId?: string };
   onRatingConfirm?: (rating: string) => void;
   isMasterySuggested?: boolean;
   onClearSubmission?: () => void;

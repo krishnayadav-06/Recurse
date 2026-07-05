@@ -6,32 +6,51 @@ import { revalidatePath } from 'next/cache';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { problemId, rating, code, language, executionTimeMs, passed } = body;
+    const { reviewLogId, problemId: manualProblemId, rating } = body;
 
-    if (!problemId || rating === undefined) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (rating === undefined) {
+      return NextResponse.json({ error: 'Missing required field: rating' }, { status: 400 });
+    }
+
+    if (!reviewLogId && !manualProblemId) {
+      return NextResponse.json({ error: 'Must provide either reviewLogId or problemId' }, { status: 400 });
     }
 
     const serverClient = await createServerClient();
     let { data: { user } } = await serverClient.auth.getUser();
-    if (!user) user = { id: '741c8e8b-6ce8-4f97-a04e-ce7470734f13' } as any; // fallback for testing if no auth
+
+    if (!user && process.env.NODE_ENV === 'development' && process.env.DEV_USER_ID) {
+      user = { id: process.env.DEV_USER_ID } as any;
+    }
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 1. Log the review (only if this was an actual code submission)
-    if (code && language) {
-      await serverClient.from('review_logs').insert({
-        user_id: user.id,
-        problem_id: problemId,
-        rating: rating,
-        execution_passed: passed ?? (rating > 1),
-        review_duration_ms: executionTimeMs ?? 0,
-        code: code,
-        language: language,
-        reviewed_at: new Date().toISOString()
-      });
+    let problemId = manualProblemId;
+    let executionPassed = rating > 1; // Default fallback for manual actions
+
+    // 1. If grading a real submission, verify it exists and get the trusted execution result
+    if (reviewLogId) {
+      const { data: reviewLog, error: logError } = await serverClient
+        .from('review_logs')
+        .select('problem_id, execution_passed')
+        .eq('id', reviewLogId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (logError || !reviewLog) {
+        return NextResponse.json({ error: 'Submission not found or unauthorized' }, { status: 404 });
+      }
+
+      problemId = reviewLog.problem_id;
+      executionPassed = reviewLog.execution_passed;
+
+      // Update the rating on the log
+      await serverClient
+        .from('review_logs')
+        .update({ rating })
+        .eq('id', reviewLogId);
     }
 
     // 2. Fetch current FSRS state
