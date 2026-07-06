@@ -10,11 +10,12 @@ export default async function QueuePage() {
 
   if (!user) {
     return (
-      <main className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
-        <div className="bg-red-50 text-red-700 p-4 rounded-lg">
-          Please log in to view your queue.
-        </div>
-      </main>
+      <QueueClient 
+        initialDaily={[]} 
+        initialBacklog={[]} 
+        initialUpcoming={[]} 
+        isAuthenticated={false}
+      />
     );
   }
 

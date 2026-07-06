@@ -43,8 +43,7 @@ const QueueItem = ({ title, tags, difficulty, lastReviewed, nextInterval, dueNow
           </span>
         </div>
         {dueNow ? (
-          /* TEMPORARY: Route landing page queue item to the active Problems List page */
-          <Link href="/app/problems" className="w-24 block">
+          <Link href="/?auth=login" className="w-24 block">
             <Button className="w-full">Review</Button>
           </Link>
         ) : (
@@ -97,7 +96,7 @@ export const Hero = () => {
         </p>
 
         <div className="hero-text-element flex flex-col sm:flex-row w-full sm:w-auto gap-4 mb-6">
-          <Link href="/app/problems" className="w-full sm:w-auto block">
+          <Link href="/?auth=login" className="w-full sm:w-auto block">
             <Button variant="primary" className="w-full py-3 px-6 text-base">Start your queue</Button>
           </Link>
           <Button variant="ghost" className="py-3 px-6 text-base border-gray-300">View methodology</Button>

@@ -201,10 +201,14 @@ function GhostCard({ index }: { index: number }) {
   );
 }
 
-function GhostEmptyState({ tab }: { tab?: TabOption }) {
+function GhostEmptyState({ tab, isAuthenticated }: { tab?: TabOption, isAuthenticated?: boolean }) {
   let title = "You're all caught up.";
   let desc = "No reviews due today. Add problems to get started.";
-  if (tab === "backlog") {
+  
+  if (!isAuthenticated) {
+    title = "Log in to view your queue.";
+    desc = "Track your problems and review them using spaced repetition.";
+  } else if (tab === "backlog") {
     title = "No overdue problems.";
     desc = "Great job keeping your backlog clean!";
   } else if (tab === "upcoming") {
@@ -217,7 +221,16 @@ function GhostEmptyState({ tab }: { tab?: TabOption }) {
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm px-5 py-5 text-center">
         <p className="text-sm font-medium text-gray-700">{title}</p>
         <p className="text-xs text-gray-400 mt-1">{desc}</p>
-        {tab === "daily" && (
+        {!isAuthenticated ? (
+          <div className="mt-4">
+            <Link
+              href="?auth=login"
+              className="bg-gray-900 text-white rounded-lg px-10 py-1.5 text-sm font-medium hover:bg-gray-800 hover:shadow-md transition-all duration-200 inline-block"
+            >
+              Sign in
+            </Link>
+          </div>
+        ) : tab === "daily" && (
           <div className="mt-4">
             <Link
               href="/app/problems"
@@ -242,11 +255,13 @@ function GhostEmptyState({ tab }: { tab?: TabOption }) {
 export function QueueClient({ 
   initialDaily, 
   initialBacklog, 
-  initialUpcoming 
+  initialUpcoming,
+  isAuthenticated = true
 }: { 
   initialDaily: QueueProblem[], 
   initialBacklog: QueueProblem[], 
-  initialUpcoming: QueueProblem[] 
+  initialUpcoming: QueueProblem[],
+  isAuthenticated?: boolean
 }) {
   const router = useRouter();
 
@@ -399,7 +414,7 @@ export function QueueClient({
 
       {/* Content */}
       {sortedProblems.length === 0 ? (
-        <GhostEmptyState tab={activeTab} />
+        <GhostEmptyState tab={activeTab} isAuthenticated={isAuthenticated} />
       ) : (
         <div className="space-y-2">
           {sortedProblems.map((problem) => (
