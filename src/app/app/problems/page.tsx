@@ -7,13 +7,23 @@ export const dynamic = "force-dynamic";
 export default async function ProblemsPage() {
   const supabase = await createClient();
 
+  const { data: { user } } = await supabase.auth.getUser();
+  let userId = user?.id;
+  if (!userId && process.env.NODE_ENV === "development" && process.env.DEV_USER_ID) {
+    userId = process.env.DEV_USER_ID;
+  }
+
+  const statusPromise = userId 
+    ? supabase.from("user_problems").select("problem_id, reps").eq("user_id", userId)
+    : Promise.resolve({ data: [], error: null });
+
   // Fire both queries in parallel
   const [problemsRes, statusRes] = await Promise.all([
     supabase
       .from("problems")
       .select("id, title, difficulty, patterns")
       .order("title", { ascending: true }),
-    supabase.from("user_problems").select("problem_id, reps"),
+    statusPromise,
   ]);
 
   if (problemsRes.error) {

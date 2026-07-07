@@ -259,6 +259,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (code.length > 50000) {
+      return NextResponse.json(
+        { error: 'Code payload too large. Maximum allowed size is 50,000 characters.' },
+        { status: 413 }
+      )
+    }
+
     if (!['python', 'cpp', 'java'].includes(language)) {
       return NextResponse.json(
         { error: `Unsupported language: ${language}` },

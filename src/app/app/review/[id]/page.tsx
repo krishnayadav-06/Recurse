@@ -204,12 +204,23 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
   }, [language, problem]);
 
   /* ---- Handlers ---- */
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const handleRun = async () => {
     if (!problem) return;
+
+    // Abort any pending execution
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setTestCaseState("running");
 
     try {
       const response = await fetch("/api/execute", {
+        signal: controller.signal,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -244,21 +255,32 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
     } catch (err: any) {
       setTestCaseState("results");
-      setGradingResult({
-        correct: false,
-        message: err.message || "Failed to connect to execution server.",
-      });
+      if (err.name !== 'AbortError') {
+        setGradingResult({
+          correct: false,
+          message: err.message || "Failed to connect to execution server.",
+        });
+      }
     }
   };
 
   const handleSubmit = async () => {
     if (!problem) return;
+    
+    // Abort any pending execution
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setSubmissionState("submitting");
     setPanelTab("submissions");
     setTestCaseState("hidden");
 
     try {
       const response = await fetch("/api/execute", {
+        signal: controller.signal,
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -309,11 +331,13 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
         }
       }
     } catch (err: any) {
-      setSubmissionState("graded");
-      setGradingResult({
-        correct: false,
-        message: err.message || "Failed to connect to execution server.",
-      });
+      if (err.name !== 'AbortError') {
+        setSubmissionState("graded");
+        setGradingResult({
+          correct: false,
+          message: err.message || "Failed to connect to execution server.",
+        });
+      }
     }
   };
 

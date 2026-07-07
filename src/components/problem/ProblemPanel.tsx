@@ -66,10 +66,25 @@ export function ProblemPanel({
       if (!hasFetchedSubs) setLoadingSubs(true);
 
       const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      let userId = user?.id;
+      if (!userId && process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_DEV_USER_ID) {
+        userId = process.env.NEXT_PUBLIC_DEV_USER_ID;
+      }
+
+      if (!userId) {
+        setSubmissions([]);
+        setLoadingSubs(false);
+        setHasFetchedSubs(true);
+        return;
+      }
+
       const { data } = await supabase
         .from("review_logs")
         .select("*")
         .eq("problem_id", problemId)
+        .eq("user_id", userId)
         .order("reviewed_at", { ascending: false });
 
       if (data) setSubmissions(data);
