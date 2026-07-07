@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { LayoutMode, ProblemToolbar } from "../../../../components/problem/ProblemToolbar";
 import { ProblemPanel } from "../../../../components/problem/ProblemPanel";
