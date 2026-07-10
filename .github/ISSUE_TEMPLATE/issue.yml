@@ -1,0 +1,73 @@
+name: Issue Report
+description: Create a report for a bug, feature request, or general inquiry.
+labels: ["triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping make recurse better, the more details you share the better.
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What kind of issue are you reporting?
+      options:
+        - Bug Report
+        - Feature Request
+        - Documentation Update
+        - Question / Discussion
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the issue or feature request.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce (If reporting a bug)
+      description: Steps to reproduce the behavior. Please provide a minimal reproduction if possible.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: false
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: false
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution (If requesting a feature)
+      description: Describe the solution or new behavior you'd like to see implemented.
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered (If requesting a feature)
+      description: Describe any alternative solutions or features you've considered.
+    validations:
+      required: false
+  - type: input
+    id: tags
+    attributes:
+      label: Tags
+    validations:
+      required: false
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, terminal logs, or screenshots about the problem here.
+    validations:
+      required: false
