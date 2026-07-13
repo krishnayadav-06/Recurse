@@ -6,18 +6,19 @@ import { getPatternStyles } from "../../lib/utils";
 import { createClient } from "../../utils/supabase/client";
 import Editor from "@monaco-editor/react";
 import { RatingOverlay } from "./RatingOverlay";
+import DOMPurify from "isomorphic-dompurify";
 
 interface ProblemPanelProps {
   problemId: string;
   title: string;
   description: string;
+  htmlContent?: string;
   constraints: string[];
   examples: Array<{ input: string; output: string; explanation?: string; images?: string[] }>;
   hints: string[];
   tags: string[];
   activeTab: "description" | "solutions" | "submissions";
   onTabChange: (tab: "description" | "solutions" | "submissions") => void;
-  isSubmitting?: boolean;
   submissionState?: "idle" | "submitting" | "graded";
   gradingResult?: { correct: boolean; message: string; solution?: string; executionTimeMs?: number; reviewLogId?: string };
   onRatingConfirm?: (rating: string) => void;
@@ -38,13 +39,13 @@ export function ProblemPanel({
   problemId,
   title,
   description,
+  htmlContent,
   constraints,
   examples,
   hints,
   tags,
   activeTab,
   onTabChange,
-  isSubmitting,
   submissionState = "idle",
   gradingResult,
   onRatingConfirm,
@@ -67,7 +68,7 @@ export function ProblemPanel({
 
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       let userId = user?.id;
       if (!userId && process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_DEV_USER_ID) {
         userId = process.env.NEXT_PUBLIC_DEV_USER_ID;
@@ -92,21 +93,60 @@ export function ProblemPanel({
       setHasFetchedSubs(true);
     };
 
-    if (!isSubmitting) {
+    if (submissionState !== "submitting") {
       fetchSubmissions();
     }
-  }, [problemId, isSubmitting]);
+  }, [problemId, submissionState]);
 
   const renderDescription = () => (
     <div className="space-y-5 p-5">
       <div className="space-y-4">
-        <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-        <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
-          {description}
-        </div>
+        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+        {htmlContent ? (
+          <div
+            className="
+              text-[15px] text-gray-900 leading-relaxed problem-description-html tracking-tight font-sans
+              [&_p]:mb-5 
+              [&_ul]:mb-5 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-2
+              [&_ol]:mb-5 [&_ol]:list-decimal [&_ol]:pl-5 
+              [&_strong]:font-semibold [&_strong]:text-black
+              [&_em]:italic
+              [&_img]:max-w-full [&_img]:my-8 [&_img]:mix-blend-multiply
+              [&_code]:font-mono [&_code]:text-[13.5px] [&_code]:text-black [&_code]:bg-black/[0.04] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-sm
+              
+              /* Pre tags (older Leetcode format) */
+              [&_pre]:my-8 [&_pre]:pl-4 [&_pre]:border-l-2 [&_pre]:border-gray-300 [&_pre]:text-[13.5px] [&_pre]:text-gray-800 [&_pre]:font-mono [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_pre]:leading-relaxed
+              [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-black [&_pre_code]:rounded-none
+              [&_pre_strong]:font-sans [&_pre_strong]:font-semibold [&_pre_strong]:text-black [&_pre_strong]:tracking-tight
+              
+              /* Example Block (newer Leetcode format) */
+              [&_.example-block]:my-8 [&_.example-block]:pl-4 [&_.example-block]:border-l-2 [&_.example-block]:border-gray-300 [&_.example-block]:text-[13.5px] [&_.example-block]:text-gray-800 [&_.example-block]:font-mono [&_.example-block]:leading-relaxed
+              [&_.example-block_p]:mb-1.5 [&_.example-block_p:last-child]:mb-0
+              [&_.example-block_strong]:font-sans [&_.example-block_strong]:font-semibold [&_.example-block_strong]:text-black [&_.example-block_strong]:tracking-tight
+              
+              /* Example Wrapper (custom parsing format) */
+              [&_.example-wrapper]:my-10 [&_.example-wrapper]:flex [&_.example-wrapper]:flex-col [&_.example-wrapper]:gap-3
+              [&_.example-wrapper_img]:self-start [&_.example-wrapper_img]:max-h-[320px] [&_.example-wrapper_img]:object-contain [&_.example-wrapper_img]:my-4
+              [&_.example-wrapper_pre]:my-2 [&_.example-wrapper_pre]:pl-4 [&_.example-wrapper_pre]:border-l-2 [&_.example-wrapper_pre]:border-gray-300 [&_.example-wrapper_pre]:bg-transparent [&_.example-wrapper_pre]:p-0 [&_.example-wrapper_pre]:text-[13.5px] [&_.example-wrapper_pre]:text-gray-800 [&_.example-wrapper_pre]:leading-relaxed
+              [&_.example-wrapper_pre_strong]:font-sans [&_.example-wrapper_pre_strong]:font-semibold [&_.example-wrapper_pre_strong]:text-black [&_.example-wrapper_pre_strong]:tracking-tight
+              
+              [&_.example-wrapper_.example-block]:my-2 [&_.example-wrapper_.example-block]:pl-4 [&_.example-wrapper_.example-block]:border-l-2 [&_.example-wrapper_.example-block]:border-gray-300 [&_.example-wrapper_.example-block]:bg-transparent [&_.example-wrapper_.example-block]:p-0 [&_.example-wrapper_.example-block]:text-[13.5px] [&_.example-wrapper_.example-block]:text-gray-800 [&_.example-wrapper_.example-block]:font-mono [&_.example-wrapper_.example-block]:leading-relaxed
+              [&_.example-wrapper_p]:mb-0
+              [&_.example-wrapper_.example-block_p]:mb-1.5 [&_.example-wrapper_.example-block_p:last-child]:mb-0
+              [&_.example-wrapper_.example-block_strong]:font-sans [&_.example-wrapper_.example-block_strong]:font-semibold [&_.example-wrapper_.example-block_strong]:text-black [&_.example-wrapper_.example-block_strong]:tracking-tight
+              
+              [&_.example]:block [&_.example]:text-[15px] [&_.example]:font-semibold [&_.example]:text-black [&_.example]:tracking-tight [&_.example]:mb-2
+            "
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(htmlContent, { ADD_ATTR: ['class'] }) }}
+          />
+        ) : (
+          <div className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+            {description}
+          </div>
+        )}
       </div>
 
-      {examples.length > 0 && (
+      {!htmlContent && examples.length > 0 && (
         <div className="space-y-3">
           {examples.map((ex, idx) => {
             const uniqueImages = ex.images?.filter((imgUrl) => {
@@ -151,7 +191,7 @@ export function ProblemPanel({
         </div>
       )}
 
-      {constraints.length > 0 && (
+      {!htmlContent && constraints.length > 0 && (
         <div className="space-y-2">
           <div className="text-sm font-medium text-gray-900">Constraints:</div>
           <ul className="list-disc pl-5 space-y-1">
@@ -249,7 +289,7 @@ export function ProblemPanel({
         {submissionState === "graded" && gradingResult && (
           <div className="flex flex-col flex-1 overflow-y-auto scrollbar-hide p-5 relative">
             <div className="flex items-center justify-between mb-4">
-              <button 
+              <button
                 onClick={onClearSubmission}
                 className="text-xs font-medium text-gray-500 hover:text-gray-900 flex items-center gap-1 transition-colors"
               >
@@ -278,7 +318,7 @@ export function ProblemPanel({
                     <div className="mt-1 text-sm opacity-80">{gradingResult.message}</div>
                   )}
                   {gradingResult.solution && (
-                    <button 
+                    <button
                       onClick={() => setShowSolution(!showSolution)}
                       className="mt-2 text-xs font-medium border border-gray-300 rounded px-2 py-1 bg-white hover:bg-gray-50 transition-colors"
                     >
@@ -423,11 +463,10 @@ export function ProblemPanel({
       <div className="flex items-center border-b border-gray-200 px-3 bg-[#f8f9fa] shrink-0 h-[34px] gap-2.5">
         <button
           onClick={() => onTabChange("description")}
-          className={`text-xs transition-colors flex items-center gap-1.5 ${
-            activeTab === "description"
+          className={`text-xs transition-colors flex items-center gap-1.5 ${activeTab === "description"
               ? "font-semibold text-gray-900"
               : "font-medium text-gray-500 hover:text-gray-700"
-          }`}
+            }`}
         >
           <FileText className={`w-3.5 h-3.5 ${activeTab === "description" ? "text-blue-500" : "text-blue-400"}`} />
           Description
@@ -437,11 +476,10 @@ export function ProblemPanel({
 
         <button
           onClick={() => onTabChange("solutions")}
-          className={`text-xs transition-colors flex items-center gap-1.5 ${
-            activeTab === "solutions"
+          className={`text-xs transition-colors flex items-center gap-1.5 ${activeTab === "solutions"
               ? "font-semibold text-gray-900"
               : "font-medium text-gray-500 hover:text-gray-700"
-          }`}
+            }`}
         >
           <FlaskConical className={`w-3.5 h-3.5 ${activeTab === "solutions" ? "text-blue-500" : "text-blue-400"}`} />
           Solutions
@@ -451,11 +489,10 @@ export function ProblemPanel({
 
         <button
           onClick={() => onTabChange("submissions")}
-          className={`text-xs transition-colors flex items-center gap-1.5 ${
-            activeTab === "submissions"
+          className={`text-xs transition-colors flex items-center gap-1.5 ${activeTab === "submissions"
               ? "font-semibold text-gray-900"
               : "font-medium text-gray-500 hover:text-gray-700"
-          }`}
+            }`}
         >
           <History className={`w-3.5 h-3.5 ${activeTab === "submissions" ? "text-blue-500" : "text-blue-400"}`} />
           Submissions

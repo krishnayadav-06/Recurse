@@ -25,6 +25,7 @@ interface ProblemRow {
   title: string;
   difficulty: "Easy" | "Medium" | "Hard";
   description: string | null;
+  html_content: string | null;
   patterns: string[];
   starter_code: { python?: string; java?: string; cpp?: string } | null;
   sample_cases: SampleCase[] | null;
@@ -142,7 +143,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
       const supabase = createClient();
       const { data, error: fetchError } = await supabase
         .from("problems")
-        .select("id, title, difficulty, description, patterns, starter_code, sample_cases, constraints")
+        .select("id, title, difficulty, description, html_content, patterns, starter_code, sample_cases, constraints")
         .eq("id", id)
         .single();
 
@@ -465,6 +466,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
             problemId={problem.id}
             title={problem.title}
             description={descriptionBody}
+            htmlContent={problem.html_content || undefined}
             constraints={constraints}
             examples={examples}
             hints={hints}
