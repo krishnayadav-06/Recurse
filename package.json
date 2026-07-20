@@ -13,6 +13,8 @@
     "@monaco-editor/react": "^4.7.0",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.1",
     "dotenv": "^17.4.2",
     "gsap": "^3.15.0",
     "isomorphic-dompurify": "^3.18.0",

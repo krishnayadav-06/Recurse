@@ -1,5 +1,13 @@
-
 import { NextRequest, NextResponse } from 'next/server'
+import { Redis } from "@upstash/redis"
+import { Ratelimit } from "@upstash/ratelimit"
+
+// Create a new ratelimiter, that allows 10 requests per 10 seconds
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(10, "10 s"),
+})
+
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '../../../utils/supabase/server'
 import { generatePythonHarness } from '../../../lib/runners/python'
@@ -246,6 +254,20 @@ export async function POST(request: NextRequest) {
         { error: 'Authentication required. Please sign in to execute code.' },
         { status: 401 }
       )
+    }
+
+    // --- Rate Limiting ---
+    const isDevFallback = process.env.NODE_ENV === 'development' && user.id === process.env.DEV_USER_ID;
+    
+    // Bypass rate limiting for local dev scripts so they can bulk process tests rapidly
+    if (!isDevFallback) {
+      const { success } = await ratelimit.limit(user.id);
+      if (!success) {
+        return NextResponse.json(
+          { error: 'You are submitting code too quickly. Please wait a few seconds.' },
+          { status: 429 }
+        )
+      }
     }
 
     const body = await request.json()
