@@ -481,11 +481,14 @@ export async function POST(request: NextRequest) {
               },
             ],
             stdin: JSON.stringify(batch.cases),
-            run_timeout: 10000,
+            run_timeout: 5000,
             output_limit: 10000000,
             compile_timeout: 10000,
-
-            compile_args: language === 'cpp' ? ['-std=c++20'] : undefined,
+            run_memory_limit: 268435456, // 256 MB
+            compile_memory_limit: 536870912, // 512 MB
+            compile_args: language === 'cpp' 
+              ? ['-std=c++20', '-O2', '-Wall', '-Werror=uninitialized', '-Werror=return-type', '-Werror=sequence-point', '-fsanitize=address,undefined', '-fno-sanitize-recover=undefined'] 
+              : undefined,
           };
 
           const pistonResponse = await fetch(PISTON_API_URL, {
@@ -543,7 +546,16 @@ export async function POST(request: NextRequest) {
 
       // --- Check for runtime errors ---
       if (pistonResult.run.code !== 0 && !pistonResult.run.stdout) {
-        globalError = `Runtime Error:\\n${pistonResult.run.stderr || pistonResult.run.output}`
+        const errorText = pistonResult.run.stderr || pistonResult.run.output || '';
+        if (errorText.includes('Segmentation fault')) {
+          globalError = `Runtime Error (Segmentation Fault): Memory access violation.\\n${errorText}`;
+        } else if (errorText.includes('fatal signal 6') || errorText.includes('Killed') || pistonResult.run.signal === 'SIGKILL') {
+          // It could be TLE or MLE. If executionTimeMs is very low, it's likely MLE, but distinguishing is hard.
+          // Let's surface it as TLE / MLE generically.
+          globalError = `Time/Memory Limit Exceeded: Process was forcibly killed by the sandbox.\\n${errorText}`;
+        } else {
+          globalError = `Runtime Error:\\n${errorText}`;
+        }
         break
       }
 
