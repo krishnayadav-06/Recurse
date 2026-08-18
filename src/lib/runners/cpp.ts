@@ -18,6 +18,7 @@ export interface HarnessOptions {
     inputTypes: string[]
     outputType: string
     inPlace?: boolean
+    marker?: string
 }
 
 function getCppType(type: string): string {
@@ -559,20 +560,20 @@ ${argExtractions}
             total_execution_time_ms += chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count();
             
             if (total_execution_time_ms > 200000) {
-                cout << "{\\"error\\":\\"Time Limit Exceeded\\"}" << endl;
+                cout << "${options.marker}ERR:{\\"error\\":\\"Time Limit Exceeded\\"}" << endl;
                 break;
             }
             
-            cout << ${outputSerializer} << endl;
+            cout << "${options.marker}OUT:" << ${outputSerializer} << endl;
         } catch (const exception& e) {
-            cout << "{\\"error\\":\\"" << e.what() << "\\"}" << endl;
+            cout << "${options.marker}ERR:{\\"error\\":\\"" << e.what() << "\\"}" << endl;
         }
         
         freeAllocations();
         pos = quote_end + 1;
     }
 
-    cout << "[NATIVE_TIME_MS]=" << fixed << setprecision(3) << (double)total_execution_time_ms << endl;
+    cout << "${options.marker}TIME:" << fixed << setprecision(3) << (double)total_execution_time_ms << endl;
     return 0;
 }
 `

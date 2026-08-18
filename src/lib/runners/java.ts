@@ -18,6 +18,7 @@ interface HarnessOptions {
     inputTypes: string[]
     outputType: string
     inPlace?: boolean
+    marker?: string
 }
 
 function getJavaType(type: string): string {

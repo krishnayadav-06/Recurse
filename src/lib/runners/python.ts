@@ -18,6 +18,7 @@ interface HarnessOptions {
   inputTypes: string[]
   outputType: string
   inPlace?: boolean
+  marker?: string
 }
 
 /**
@@ -300,16 +301,16 @@ ${argParsers}
             total_execution_time_ms += (end_time - start_time) * 1000
             
             if total_execution_time_ms > 200000:
-                print('{"error":"Time Limit Exceeded"}')
+                print(f'${options.marker}ERR:{{"error":"Time Limit Exceeded"}}')
                 break
                 
             output = ${outputSerializer}
-            print(json.dumps(output, separators=(',', ':')))
+            print(f'${options.marker}OUT:{json.dumps(output, separators=(",", ":"))}')
         except Exception as e:
-            print(json.dumps({"error": str(e)}, separators=(',', ':')))
+            print(f'${options.marker}ERR:{json.dumps({"error": str(e)}, separators=(",", ":"))}')
             
         pos = quote_end + 1
 
-    print(f'[NATIVE_TIME_MS]={total_execution_time_ms:.3f}')
+    print(f'${options.marker}TIME:{total_execution_time_ms:.3f}')
 `
 }

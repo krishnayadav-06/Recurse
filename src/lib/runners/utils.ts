@@ -115,5 +115,9 @@ export function parseSampleCase(exampleText: string): TestCase | null {
     return null
   }
 
-  return { input: inputStr.trim(), expected: expectedStr.trim() }
+  // Strip literal newlines from the parsed strings to prevent Java/C++ harness parser crashes
+  return { 
+    input: inputStr.replace(/\r?\n/g, '').trim(), 
+    expected: expectedStr.replace(/\r?\n/g, '').trim() 
+  }
 }

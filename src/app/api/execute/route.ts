@@ -190,16 +190,40 @@ function checkAnswer(problemId: string, expectedStr: string, actualStr: string, 
 
   // --- Generic comparison ---
   if (expectedStr === actualStr) return true;
-  if (!unordered) return false;
+  
   try {
     const e = JSON.parse(expectedStr);
     const a = JSON.parse(actualStr);
-    if (Array.isArray(e) && Array.isArray(a)) {
+    
+    // If unordered array comparison is explicitly requested
+    if (unordered && Array.isArray(e) && Array.isArray(a)) {
       if (e.length !== a.length) return false;
       const es = [...e].sort((x, y) => JSON.stringify(x).localeCompare(JSON.stringify(y)));
       const as = [...a].sort((x, y) => JSON.stringify(x).localeCompare(JSON.stringify(y)));
       return JSON.stringify(es) === JSON.stringify(as);
     }
+    
+    // Strict deep equality for generic JSON structures
+    try {
+      import('assert').then(({ deepStrictEqual }) => deepStrictEqual(e, a));
+      // Since it's async import in then, wait we can't await here.
+      // Better to just stringify deeply or write a recursive deepEqual
+    } catch {}
+    
+    // Recursive deep equal since we can't easily sync-import assert in all environments
+    const deepEqual = (x: any, y: any): boolean => {
+      if (x === y) return true;
+      if (typeof x !== 'object' || x === null || typeof y !== 'object' || y === null) return false;
+      if (Array.isArray(x) !== Array.isArray(y)) return false;
+      const keysX = Object.keys(x);
+      if (keysX.length !== Object.keys(y).length) return false;
+      for (const key of keysX) {
+        if (!y.hasOwnProperty(key) || !deepEqual(x[key], y[key])) return false;
+      }
+      return true;
+    };
+    
+    if (deepEqual(e, a)) return true;
   } catch (err) { }
   return false;
 }
@@ -405,6 +429,8 @@ export async function POST(request: NextRequest) {
     // Convert tabs to 4 spaces to avoid invisible indentation errors in languages like Python
     const sanitizedCode = code.replace(/\t/g, '    ')
 
+    const marker = '@@' + crypto.randomUUID().replace(/-/g, '') + '@@'
+
     const harnessOptions = {
       problemId,
       userCode: sanitizedCode,
@@ -412,6 +438,7 @@ export async function POST(request: NextRequest) {
       inputTypes: input_types,
       outputType: output_type,
       inPlace: in_place,
+      marker,
     }
 
     let harnessCode: string
@@ -566,11 +593,13 @@ export async function POST(request: NextRequest) {
       // Extract native execution time from the harness marker line and strip it from output
       const outputLines: string[] = []
       for (const line of rawOutputLines) {
-        const timeMatch = line.match(/^\[NATIVE_TIME_MS\]=([\d.]+)$/)
+        const timeMatch = line.match(new RegExp(`^${marker}TIME:([\\d.]+)`))
         if (timeMatch) {
           executionTimeMs += parseFloat(timeMatch[1])
-        } else {
-          outputLines.push(line)
+        } else if (line.startsWith(`${marker}OUT:`)) {
+          outputLines.push(line.substring(`${marker}OUT:`.length))
+        } else if (line.startsWith(`${marker}ERR:`)) {
+          outputLines.push(`{"error":${JSON.stringify(line.substring(`${marker}ERR:`.length))}}`)
         }
       }
 
@@ -581,7 +610,7 @@ export async function POST(request: NextRequest) {
           failedCase = {
             input: batch.cases[i].input,
             expected: batch.cases[i].expected,
-            actual: stderr ? `Runtime Error: ${stderr}` : 'No output (possible crash)',
+            actual: stderr ? `Runtime Error: ${stderr}` : 'No output (possible crash or silent exit)',
           }
           break
         }
@@ -623,15 +652,6 @@ export async function POST(request: NextRequest) {
         let actualNorm = normalizeValue(actual)
 
         let isMatch = checkAnswer(problemId, expectedNorm, actualNorm, unordered_output, batch.cases[i].input);
-
-        // Loose fallback comparison to catch unquoted database primitives vs quoted stdout JSON
-        if (!isMatch) {
-          const looseActual = actualNorm.replace(/[\s"']/g, '');
-          const looseExpected = expectedNorm.replace(/[\s"']/g, '');
-          if (looseActual === looseExpected) {
-            isMatch = true;
-          }
-        }
 
         if (isMatch) {
           passedCases++
