@@ -491,7 +491,7 @@ export async function POST(request: NextRequest) {
 
     let batchResults;
     try {
-      const CONCURRENCY_LIMIT = 1;
+      const CONCURRENCY_LIMIT = 10;
       batchResults = [];
       const executing = new Set<Promise<void>>();
 
@@ -681,7 +681,13 @@ export async function POST(request: NextRequest) {
     let reviewLogId: string | undefined;
 
     if (action === 'submit') {
-      const { data: logData, error: logError } = await serverClient.from('review_logs').insert({
+      // If there's no active session (like when running local validation scripts), 
+      // serverClient acts as an anonymous user and will fail RLS policies.
+      // In development, if we fell back to the DEV_USER_ID, we must use the admin client to bypass RLS.
+      const isDevFallback = process.env.NODE_ENV === 'development' && user.id === process.env.DEV_USER_ID;
+      const dbClient = isDevFallback ? createAdminClient() : serverClient;
+
+      const { data: logData, error: logError } = await dbClient.from('review_logs').insert({
         user_id: user.id,
         problem_id: problemId,
         rating: null,
@@ -824,4 +830,3 @@ function sortForHashing(item: any): any {
   }
   return item
 }
-// touch 1
