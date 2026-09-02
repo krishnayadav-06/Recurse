@@ -1,95 +1,95 @@
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 dotenv.config({ path: path.join(process.cwd(), '.env.local') });
-import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY;
+const SOLUTIONS_DIR = path.join(process.cwd(), 'data', 'solutions');
+const API_BASE = 'http://localhost:3000/api';
+const BATCH_SIZE = 10;
+const TARGET_LANG = 'java';
+const PREFIX = 'java_';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const ADMIN_USER_ID = process.env.DEV_USER_ID;
 
-async function runJavaValidation() {
-  console.log("Fetching all problems from database...");
-  const { data: problems, error } = await supabase.from('problems').select('id, starter_code');
-  if (error || !problems) {
-    console.error("Failed to fetch problems:", error);
-    return;
-  }
+if (!ADMIN_USER_ID) {
+  console.error('DEV_USER_ID not set in .env.local');
+  process.exit(1);
+}
 
-  console.log(`Found ${problems.length} problems. Starting Java-exclusive validation with low concurrency...`);
+async function main() {
+  const problemDirs = fs.readdirSync(SOLUTIONS_DIR).filter(f => {
+    return fs.statSync(path.join(SOLUTIONS_DIR, f)).isDirectory();
+  });
+
+  console.log(`Found ${problemDirs.length} solution directories.`);
+  console.log(`Validating ${TARGET_LANG} solutions...\n`);
 
   let successCount = 0;
-  let totalExecutions = 0;
-  let failures = [];
+  let failCount = 0;
+  const failures = [];
 
-  // Keep batch size very low (e.g., 2) to prevent WSL2 Docker JVM OOM errors
-  const BATCH_SIZE = 2;
+  const jobs = [];
+  for (const problemId of problemDirs) {
+    const solDir = path.join(SOLUTIONS_DIR, problemId);
+    const files = fs.readdirSync(solDir);
 
-  for (let i = 0; i < problems.length; i += BATCH_SIZE) {
-    const batch = problems.slice(i, i + BATCH_SIZE);
-    const tasks = [];
+    const solFile = files.find(f => f.startsWith(PREFIX));
+    if (!solFile) continue;
 
-    for (const prob of batch) {
-      if (!prob.starter_code || !prob.starter_code.java) continue;
+    const code = fs.readFileSync(path.join(solDir, solFile), 'utf-8');
+    jobs.push({ problemId, language: TARGET_LANG, code });
+  }
 
-      const code = prob.starter_code.java;
-      totalExecutions++;
+  console.log(`Total jobs: ${jobs.length}\n`);
 
-      tasks.push(
-        fetch('http://localhost:3000/api/execute', {
+  const resultsMap = {};
+
+  for (let i = 0; i < jobs.length; i += BATCH_SIZE) {
+    const batch = jobs.slice(i, i + BATCH_SIZE);
+    const tasks = batch.map(async ({ problemId, language, code }) => {
+      try {
+        const execRes = await fetch(`${API_BASE}/execute`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ problemId: prob.id, language: 'java', action: 'run', code })
-        })
-          .then(res => res.json())
-          .then(data => {
-            let isParserSuccess = true;
-            if (data.error) {
-              const errStr = data.error;
-              const isStarterCodeErr = errStr.includes('missing return statement') ||
-                errStr.includes('no return statement') ||
-                errStr.includes('unreachable statement') ||
-                errStr.includes('variable') ||
-                errStr.includes('cannot find symbol') ||
-                errStr.includes('incompatible types') ||
-                errStr.includes('No test cases available');
+          body: JSON.stringify({ problemId, code, language, action: 'submit' }),
+        });
+        const execData = await execRes.json();
 
-              if (!isStarterCodeErr) {
-                console.error(`\n❌ [${prob.id} | java] SUSPECTED ERROR:`);
-                console.error(errStr.split('\n').slice(0, 5).join('\n'));
-                isParserSuccess = false;
-              }
-            }
-            if (isParserSuccess) {
-              successCount++;
-              process.stdout.write('.');
-            } else {
-              failures.push(`${prob.id}`);
-            }
-          })
-          .catch(e => {
-            console.error(`\n❌ [${prob.id} | java] FETCH EXCEPTION: ${e.message}`);
-            failures.push(`${prob.id}`);
-          })
-      );
-    }
+        if (execRes.status === 401) {
+          console.error(`\nAuth failed — is DEV_USER_ID set and dev server running?`);
+          process.exit(1);
+        }
 
-    // Wait for the batch to finish
+        const passed = execData.passed === true || (execData.passedCases === execData.totalCases && execData.totalCases > 0);
+
+        resultsMap[problemId] = { passed, submit: execData };
+
+        if (passed) {
+          successCount++;
+          process.stdout.write('.');
+        } else {
+          failCount++;
+          failures.push(`${problemId} (${language}): Test failed or error occurred.`);
+          process.stdout.write('x');
+        }
+      } catch (err) {
+        failCount++;
+        failures.push(`${problemId} (${language}): ${err.message}`);
+        process.stdout.write('x');
+        resultsMap[problemId] = { passed: false, error: err.message };
+      }
+    });
+
     await Promise.all(tasks);
+    fs.writeFileSync(path.join(process.cwd(), `scratch/validation_results_${TARGET_LANG}.json`), JSON.stringify(resultsMap, null, 2));
   }
 
-  console.log(`\n\n✅ Java Validation Complete!`);
-  console.log(`Total API Executions: ${totalExecutions}`);
-  console.log(`Successful Parser Handlings: ${successCount} (${((successCount / totalExecutions) * 100).toFixed(1)}%)`);
+  console.log(`\n\n Done validating ${TARGET_LANG}!`);
+  console.log(`Success: ${successCount} | Failed: ${failCount}`);
   if (failures.length > 0) {
-    console.log(`Failures to investigate (${failures.length}):`);
-    console.log(failures.join(', '));
+    console.log(`\nFailures:`);
+    failures.forEach(f => console.log(`  - ${f}`));
   }
 }
 
-runJavaValidation();
-await fs.writeFile(OUTPUT_FILE, JSON.stringify(results, null, 2));
-console.log('Done!');
-}
-
-validateSolutions().catch(console.error);
+main().catch(console.error);
