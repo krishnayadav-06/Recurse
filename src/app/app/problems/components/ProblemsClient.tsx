@@ -7,7 +7,7 @@ import { Dropdown } from "./ui/Dropdown";
 import { FilterChip } from "./ui/FilterChip";
 import { PatternSelector } from "./PatternSelector";
 import { ProblemsTable } from "./ProblemsTable";
-import { CURATED_LISTS, CURATED_LIST_LABELS, NEETCODE_150_SECTIONS, type CuratedListKey } from "../../../../lib/curated-lists";
+import { CURATED_LISTS, CURATED_LIST_LABELS, NEETCODE_150_SECTIONS, LISTS_WITH_SECTIONS, type CuratedListKey } from "../../../../lib/curated-lists";
 import { DifficultyBadge } from "./ui/DifficultyBadge";
 import type { Problem, SortField, SortDir } from "../types";
 import { StudyPlanCards } from "./StudyPlanCards";
@@ -125,7 +125,7 @@ export function ProblemsClient({ initialProblems, initialStatusMap }: ProblemsCl
     [sortField, sortDir]
   );
 
-  const isDefaultSort = !sortField && (list === "all" || list === "neetcode-150");
+  const isDefaultSort = !sortField && (list === "all" || LISTS_WITH_SECTIONS.includes(list));
 
   return (
     <>

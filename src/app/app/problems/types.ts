@@ -3,6 +3,7 @@ export interface Problem {
   title: string;
   difficulty: "Easy" | "Medium" | "Hard";
   patterns: string[];
+  supportedLanguages?: string[];
 }
 
 export interface UserStatus {

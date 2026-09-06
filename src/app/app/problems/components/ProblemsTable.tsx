@@ -8,6 +8,12 @@ import { DifficultyBadge } from "./ui/DifficultyBadge";
 import { StatusIcon } from "./ui/StatusIcon";
 import type { Problem, SortField, SortDir } from "../types";
 
+const LANG_COLORS: Record<string, string> = {
+  python: "#3572A5",
+  cpp: "#f34b7d",
+  java: "#b07219",
+};
+
 interface ProblemsTableProps {
   filtered: Problem[];
   statusMap: Record<string, number>;
@@ -121,8 +127,18 @@ export function ProblemsTable({
                       <td className="font-mono text-xs text-gray-400 pl-4 py-3.5 hidden md:table-cell">
                         {idx + 1}
                       </td>
-                      <td className="px-3 py-3.5 font-medium text-gray-900 group-hover:text-signal transition-colors">
-                        {problem.title}
+                      <td className="px-3 py-3.5 font-medium text-gray-900 group-hover:text-signal transition-colors flex items-center gap-2">
+                        <span className="truncate">{problem.title}</span>
+                        <div className="flex items-center gap-1 ml-2 opacity-70 group-hover:opacity-100 transition-opacity">
+                          {problem.supportedLanguages?.map((lang) => (
+                            <div
+                              key={lang}
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ backgroundColor: LANG_COLORS[lang.toLowerCase()] || "#9ca3af" }}
+                              title={lang === 'cpp' ? 'C++' : lang.charAt(0).toUpperCase() + lang.slice(1)}
+                            />
+                          ))}
+                        </div>
                       </td>
                       <td className="px-3 py-3.5">
                         <DifficultyBadge difficulty={problem.difficulty} />

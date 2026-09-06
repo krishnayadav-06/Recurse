@@ -13,15 +13,14 @@ export default async function ProblemsPage() {
     userId = process.env.DEV_USER_ID;
   }
 
-  const statusPromise = userId 
+  const statusPromise = userId
     ? supabase.from("user_problems").select("problem_id, reps").eq("user_id", userId)
     : Promise.resolve({ data: [], error: null });
 
-  // Fire both queries in parallel
   const [problemsRes, statusRes] = await Promise.all([
     supabase
       .from("problems")
-      .select("id, title, difficulty, patterns")
+      .select("id, title, difficulty, patterns, supported_languages")
       .order("title", { ascending: true }),
     statusPromise,
   ]);
@@ -38,7 +37,10 @@ export default async function ProblemsPage() {
     );
   }
 
-  const initialProblems = (problemsRes.data || []) as Problem[];
+  const initialProblems = (problemsRes.data || []).map((p) => ({
+    ...p,
+    supportedLanguages: p.supported_languages ?? [],
+  })) as Problem[];
 
   const initialStatusMap: Record<string, number> = {};
   if (statusRes.data) {

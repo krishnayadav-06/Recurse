@@ -4,71 +4,154 @@
  * Used by the Problems page List dropdown to filter client-side.
  */
 
-export const BLIND_75: ReadonlySet<string> = new Set([
-  "two-sum",
-  "best-time-to-buy-and-sell-stock",
-  "contains-duplicate",
-  "product-of-array-except-self",
-  "maximum-subarray",
-  "maximum-product-subarray",
-  "find-minimum-in-rotated-sorted-array",
-  "search-in-rotated-sorted-array",
-  "3sum",
-  "container-with-most-water",
-  "sum-of-two-integers",
-  "number-of-1-bits",
-  "counting-bits",
-  "missing-number",
-  "reverse-bits",
-  "climbing-stairs",
-  "coin-change",
-  "longest-increasing-subsequence",
-  "longest-common-subsequence",
-  "word-break",
-  "combination-sum",
-  "house-robber",
-  "house-robber-ii",
-  "decode-ways",
-  "unique-paths",
-  "jump-game",
-  "longest-substring-without-repeating-characters",
-  "longest-repeating-character-replacement",
-  "minimum-window-substring",
-  "valid-anagram",
-  "group-anagrams",
-  "valid-parentheses",
-  "valid-palindrome",
-  "longest-palindromic-substring",
-  "palindromic-substrings",
-  "invert-binary-tree",
-  "maximum-depth-of-binary-tree",
-  "same-tree",
-  "subtree-of-another-tree",
-  "lowest-common-ancestor-of-a-binary-tree",
-  "binary-tree-level-order-traversal",
-  "validate-binary-search-tree",
-  "kth-smallest-element-in-a-bst",
-  "construct-binary-tree-from-preorder-and-inorder-traversal",
-  "binary-tree-maximum-path-sum",
-  "top-k-frequent-elements",
-  "merge-k-sorted-lists",
-  "number-of-islands",
-  "course-schedule",
-  "pacific-atlantic-water-flow",
-  "longest-consecutive-sequence",
-  "merge-intervals",
-  "insert-interval",
-  "non-overlapping-intervals",
-  "set-matrix-zeroes",
-  "spiral-matrix",
-  "rotate-image",
-  "word-search",
-  "reverse-linked-list",
-  "merge-two-sorted-lists",
-  "reorder-list",
-  "remove-nth-node-from-end-of-list",
-  "linked-list-cycle",
-]);
+export const BLIND_75_SECTIONS = [
+  {
+    topic: "Arrays & Hashing",
+    problems: [
+      "contains-duplicate",
+      "valid-anagram",
+      "two-sum",
+      "group-anagrams",
+      "top-k-frequent-elements",
+      "product-of-array-except-self",
+      "longest-consecutive-sequence",
+    ]
+  },
+  {
+    topic: "Two Pointers",
+    problems: [
+      "valid-palindrome",
+      "3sum",
+      "container-with-most-water",
+    ]
+  },
+  {
+    topic: "Sliding Window",
+    problems: [
+      "best-time-to-buy-and-sell-stock",
+      "longest-substring-without-repeating-characters",
+      "longest-repeating-character-replacement",
+      "minimum-window-substring",
+    ]
+  },
+  {
+    topic: "Stack",
+    problems: [
+      "valid-parentheses",
+    ]
+  },
+  {
+    topic: "Binary Search",
+    problems: [
+      "find-minimum-in-rotated-sorted-array",
+      "search-in-rotated-sorted-array",
+    ]
+  },
+  {
+    topic: "Linked List",
+    problems: [
+      "reverse-linked-list",
+      "merge-two-sorted-lists",
+      "reorder-list",
+      "remove-nth-node-from-end-of-list",
+      "linked-list-cycle",
+      "merge-k-sorted-lists",
+    ]
+  },
+  {
+    topic: "Trees",
+    problems: [
+      "invert-binary-tree",
+      "maximum-depth-of-binary-tree",
+      "same-tree",
+      "subtree-of-another-tree",
+      "lowest-common-ancestor-of-a-binary-tree",
+      "binary-tree-level-order-traversal",
+      "validate-binary-search-tree",
+      "kth-smallest-element-in-a-bst",
+      "construct-binary-tree-from-preorder-and-inorder-traversal",
+      "binary-tree-maximum-path-sum",
+    ]
+  },
+  {
+    topic: "Tries",
+    problems: [
+      "word-search-ii",
+    ]
+  },
+  {
+    topic: "Backtracking",
+    problems: [
+      "combination-sum",
+      "word-search",
+    ]
+  },
+  {
+    topic: "Graphs",
+    problems: [
+      "number-of-islands",
+      "pacific-atlantic-water-flow",
+      "course-schedule",
+    ]
+  },
+  {
+    topic: "1-D Dynamic Programming",
+    problems: [
+      "climbing-stairs",
+      "house-robber",
+      "house-robber-ii",
+      "longest-palindromic-substring",
+      "palindromic-substrings",
+      "decode-ways",
+      "coin-change",
+      "maximum-product-subarray",
+      "word-break",
+      "longest-increasing-subsequence",
+    ]
+  },
+  {
+    topic: "2-D Dynamic Programming",
+    problems: [
+      "unique-paths",
+      "longest-common-subsequence",
+    ]
+  },
+  {
+    topic: "Greedy",
+    problems: [
+      "maximum-subarray",
+      "jump-game",
+    ]
+  },
+  {
+    topic: "Intervals",
+    problems: [
+      "insert-interval",
+      "merge-intervals",
+      "non-overlapping-intervals",
+    ]
+  },
+  {
+    topic: "Math & Geometry",
+    problems: [
+      "rotate-image",
+      "spiral-matrix",
+      "set-matrix-zeroes",
+    ]
+  },
+  {
+    topic: "Bit Manipulation",
+    problems: [
+      "number-of-1-bits",
+      "counting-bits",
+      "reverse-bits",
+      "missing-number",
+      "sum-of-two-integers",
+    ]
+  }
+];
+
+export const BLIND_75: ReadonlySet<string> = new Set(BLIND_75_SECTIONS.flatMap(s => s.problems));
 
 export const NEETCODE_150_SECTIONS = [
   {
@@ -134,7 +217,9 @@ export const NEETCODE_150_SECTIONS = [
       "merge-two-sorted-lists",
       "reorder-list",
       "remove-nth-node-from-end-of-list",
+      "add-two-numbers",
       "linked-list-cycle",
+      "find-the-duplicate-number",
       "merge-k-sorted-lists",
       "reverse-nodes-in-k-group",
     ]
@@ -159,11 +244,17 @@ export const NEETCODE_150_SECTIONS = [
     ]
   },
   {
+    topic: "Tries",
+    problems: [
+      "word-search-ii",
+    ]
+  },
+  {
     topic: "Heap / Priority Queue",
     problems: [
-      "kth-largest-element-in-an-array",
       "last-stone-weight",
       "k-closest-points-to-origin",
+      "kth-largest-element-in-an-array",
       "task-scheduler",
     ]
   },
@@ -172,9 +263,9 @@ export const NEETCODE_150_SECTIONS = [
     problems: [
       "subsets",
       "combination-sum",
-      "combination-sum-ii",
       "permutations",
       "subsets-ii",
+      "combination-sum-ii",
       "word-search",
       "palindrome-partitioning",
       "letter-combinations-of-a-phone-number",
@@ -186,9 +277,9 @@ export const NEETCODE_150_SECTIONS = [
     problems: [
       "number-of-islands",
       "max-area-of-island",
+      "rotting-oranges",
       "pacific-atlantic-water-flow",
       "surrounded-regions",
-      "rotting-oranges",
       "course-schedule",
       "course-schedule-ii",
       "redundant-connection",
@@ -196,7 +287,17 @@ export const NEETCODE_150_SECTIONS = [
     ]
   },
   {
-    topic: "Dynamic Programming",
+    topic: "Advanced Graphs",
+    problems: [
+      "reconstruct-itinerary",
+      "min-cost-to-connect-all-points",
+      "network-delay-time",
+      "swim-in-rising-water",
+      "cheapest-flights-within-k-stops",
+    ]
+  },
+  {
+    topic: "1-D Dynamic Programming",
     problems: [
       "climbing-stairs",
       "min-cost-climbing-stairs",
@@ -210,8 +311,15 @@ export const NEETCODE_150_SECTIONS = [
       "word-break",
       "longest-increasing-subsequence",
       "partition-equal-subset-sum",
+    ]
+  },
+  {
+    topic: "2-D Dynamic Programming",
+    problems: [
+      "unique-paths",
       "longest-common-subsequence",
       "best-time-to-buy-and-sell-stock-with-cooldown",
+      "coin-change-ii",
       "target-sum",
       "interleaving-string",
       "longest-increasing-path-in-a-matrix",
@@ -240,6 +348,7 @@ export const NEETCODE_150_SECTIONS = [
       "insert-interval",
       "merge-intervals",
       "non-overlapping-intervals",
+      "minimum-interval-to-include-each-query",
     ]
   },
   {
@@ -263,25 +372,9 @@ export const NEETCODE_150_SECTIONS = [
       "reverse-bits",
       "missing-number",
       "sum-of-two-integers",
+      "reverse-integer",
     ]
-  },
-  {
-    topic: "Advanced Graphs",
-    problems: [
-      "reconstruct-itinerary",
-      "min-cost-to-connect-all-points",
-      "network-delay-time",
-      "swim-in-rising-water",
-      "cheapest-flights-within-k-stops",
-    ]
-  },
-  {
-    topic: "Unique paths",
-    problems: [
-      "unique-paths",
-      "find-the-duplicate-number",
-    ]
-  },
+  }
 ];
 
 export const NEETCODE_150: ReadonlySet<string> = new Set(NEETCODE_150_SECTIONS.flatMap(s => s.problems));
@@ -378,3 +471,5 @@ export const CURATED_LIST_LABELS: Record<CuratedListKey, string> = {
   "blind-75": "Blind 75",
   "grind-75": "Grind 75",
 };
+
+export const LISTS_WITH_SECTIONS: CuratedListKey[] = ["neetcode-150", "blind-75"];
