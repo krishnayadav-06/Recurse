@@ -58,16 +58,7 @@ export function TestCasesPanel({ state, testCases, onClose, gradingResult }: Tes
 
   return (
     <div className="flex flex-col h-full bg-white relative">
-      {(state === "running") && (
-        <div className="absolute inset-0 bg-white/40 flex items-center justify-center z-50">
-          <div className="flex flex-col items-center gap-3 bg-white px-6 py-4 rounded-xl shadow-xl border border-gray-200">
-            <Loader2 size={24} className="animate-spin text-blue-500" />
-            <div className="font-mono text-xs font-medium text-gray-600">
-              Running test cases...
-            </div>
-          </div>
-        </div>
-      )}
+
       <div className="flex items-center justify-between border-b border-gray-200 pr-2">
         <div className="flex gap-1 px-3 pt-3 pb-2 overflow-x-auto">
           {testCases.map((tc, i) => (
@@ -78,8 +69,8 @@ export function TestCasesPanel({ state, testCases, onClose, gradingResult }: Tes
                 activeTab === tc.id ? "bg-gray-100 text-gray-900" : "text-gray-500 hover:bg-gray-100"
               }`}
             >
-              {tc.status === "pass" && <CheckCircle2 size={14} className="text-green-500" />}
-              {tc.status === "fail" && <XCircle size={14} className="text-red-500" />}
+              {state !== "running" && tc.status === "pass" && <CheckCircle2 size={14} className="text-green-500" />}
+              {state !== "running" && tc.status === "fail" && <XCircle size={14} className="text-red-500" />}
               Case {i + 1}
             </button>
           ))}
@@ -102,16 +93,25 @@ export function TestCasesPanel({ state, testCases, onClose, gradingResult }: Tes
           </div>
         </div>
         <div>
-          <div className="text-xs font-medium text-gray-400 uppercase tracking-wide border-b border-gray-100 pb-1 mb-2">
+          <div className="text-xs font-medium text-gray-400 uppercase tracking-wide border-b border-gray-100 pb-1 mb-2 flex items-center gap-2">
             Output
+            {state === "running" && <span className="text-[10px] text-blue-400 animate-pulse normal-case tracking-normal">Generating...</span>}
           </div>
-          <div
-            className={`font-mono text-xs rounded p-2 ${
-              activeCase?.status === "fail" ? "bg-red-50 text-red-700" : "bg-gray-50 text-gray-800"
-            }`}
-          >
-            {activeCase?.output || "..."}
-          </div>
+          {state === "running" ? (
+            <div className="font-mono text-xs bg-gray-50 rounded p-3 space-y-2.5">
+              <div className="h-2.5 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+              <div className="h-2.5 bg-gray-200 rounded w-1/2 animate-pulse" style={{ animationDelay: '150ms' }}></div>
+              <div className="h-2.5 bg-gray-200 rounded w-1/4 animate-pulse" style={{ animationDelay: '300ms' }}></div>
+            </div>
+          ) : (
+            <div
+              className={`font-mono text-xs rounded p-2 ${
+                activeCase?.status === "fail" ? "bg-red-50 text-red-700" : "bg-gray-50 text-gray-800"
+              }`}
+            >
+              {activeCase?.output || "..."}
+            </div>
+          )}
         </div>
         <div>
           <div className="text-xs font-medium text-gray-400 uppercase tracking-wide border-b border-gray-100 pb-1 mb-2">
