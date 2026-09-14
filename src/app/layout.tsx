@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { GSAPRefresh } from "../components/GSAPRefresh";
 import { AuthModal } from "../components/AuthModal";
@@ -6,6 +6,17 @@ import { AuthModal } from "../components/AuthModal";
 export const metadata: Metadata = {
   title: "Recurse | Spaced Repetition for LeetCode",
   description: "Recurse schedules your LeetCode reviews using spaced repetition - so you stop re-solving the same problems from scratch.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
