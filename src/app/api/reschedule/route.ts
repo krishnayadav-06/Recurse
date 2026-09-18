@@ -30,7 +30,6 @@ export async function POST(req: Request) {
 
   const { data: spreadCount, error: rpcError } = await supabase
     .rpc('spread_backlog', {
-      p_user_id: user.id,
       p_cutoff: cutoff
     });
 
