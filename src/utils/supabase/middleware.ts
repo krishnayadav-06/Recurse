@@ -34,17 +34,19 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect /app routes (PAUSED)
-  /*
+  // Protect /app routes in production while preserving local DEV_USER_ID bypass
+  const isDevBypass = process.env.NODE_ENV === 'development' && !!process.env.DEV_USER_ID
+
   if (
     !user &&
+    !isDevBypass &&
     request.nextUrl.pathname.startsWith('/app')
   ) {
     const url = request.nextUrl.clone()
+    url.pathname = '/'
     url.searchParams.set('auth', 'login')
     return NextResponse.redirect(url)
   }
-  */
 
   // Redirect authenticated users away from auth pages (including ?auth= modals)
   if (
