@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Redis } from "@upstash/redis"
 import { Ratelimit } from "@upstash/ratelimit"
 
-// Create a new ratelimiter, that allows 10 requests per 10 seconds
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, "10 s"),
-})
+// Create a new ratelimiter if Upstash credentials are provided (10 requests per 10 seconds)
+let ratelimit: Ratelimit | null = null;
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  try {
+    ratelimit = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(10, "10 s"),
+    });
+  } catch (err) {
+    console.warn("Failed to initialize Upstash Redis ratelimiter:", err);
+  }
+}
 
 import { createClient } from '@supabase/supabase-js'
 import { createClient as createServerClient } from '../../../utils/supabase/server'
@@ -284,13 +291,17 @@ export async function POST(request: NextRequest) {
     const isDevFallback = process.env.NODE_ENV === 'development' && user.id === process.env.DEV_USER_ID;
     
     // Bypass rate limiting for local dev scripts so they can bulk process tests rapidly
-    if (!isDevFallback) {
-      const { success } = await ratelimit.limit(user.id);
-      if (!success) {
-        return NextResponse.json(
-          { error: 'You are submitting code too quickly. Please wait a few seconds.' },
-          { status: 429 }
-        )
+    if (!isDevFallback && ratelimit) {
+      try {
+        const { success } = await ratelimit.limit(user.id);
+        if (!success) {
+          return NextResponse.json(
+            { error: 'You are submitting code too quickly. Please wait a few seconds.' },
+            { status: 429 }
+          );
+        }
+      } catch (err) {
+        console.warn('Rate limiting check failed; allowing execution:', err);
       }
     }
 
