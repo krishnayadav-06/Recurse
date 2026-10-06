@@ -1,0 +1,38 @@
+name: Keepalive (Supabase & Upstash)
+
+on:
+  schedule:
+    # Runs every 3 days at 00:00 UTC to prevent free-tier archiving
+    - cron: '0 0 */3 * *'
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
+            curl -s -f -X GET "$SUPABASE_URL/rest/v1/problems?select=id&limit=1" \
+              -H "apikey: $SUPABASE_ANON_KEY" \
+              -H "Authorization: Bearer $SUPABASE_ANON_KEY" > /dev/null
+            echo "Supabase successfully pinged."
+          else
+            echo "Supabase secrets not configured, skipping."
+          fi
+
+      - name: Ping Upstash Redis REST API
+        env:
+          UPSTASH_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+        run: |
+          if [ -n "$UPSTASH_URL" ] && [ -n "$UPSTASH_TOKEN" ]; then
+            curl -s -f -X POST "$UPSTASH_URL/ping" \
+              -H "Authorization: Bearer $UPSTASH_TOKEN" > /dev/null
+            echo "Upstash Redis successfully pinged."
+          else
+            echo "Upstash Redis secrets not configured, skipping."
+          fi

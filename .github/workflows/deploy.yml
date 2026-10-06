@@ -1,0 +1,25 @@
+name: Deploy Next.js to Production VM
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute Remote SSH Commands to Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP || secrets.DROPLET_IP }}
+          username: ${{ secrets.SERVER_USER || 'root' }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ~/_Recurse
+            git pull origin main
+            npm install --production=false
+            npm run build
+            pm2 reload ecosystem.config.cjs --update-env || pm2 start ecosystem.config.cjs
+            pm2 save

@@ -1,0 +1,30 @@
+# Replace with your actual domain or droplet public IP
+# Example: recurse.yourdomain.com, https://yourdomain.com
+:80, :443 {
+    # Encoding / Compression
+    encode gzip zstd
+
+    # Reverse proxy to Next.js application
+    reverse_proxy localhost:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    }
+
+    # Logging
+    log {
+        output file /var/log/caddy/recurse.log {
+            roll_size 10MB
+            roll_keep 5
+        }
+    }
+}
