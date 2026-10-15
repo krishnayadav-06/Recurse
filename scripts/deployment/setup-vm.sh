@@ -16,7 +16,17 @@ echo " Target User: $CURRENT_USER ($USER_HOME)"
 echo " Compatible with: Azure VM, AWS EC2, DigitalOcean, etc."
 echo "====================================================="
 
-# 1. System Updates & Docker
+# 1. Swap Configuration (Protects against OOM during Next.js builds)
+if [ ! -f /swapfile ]; then
+  echo "Configuring 2GB swap space for build resilience..."
+  fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+
+# 2. System Updates & Docker
 echo "Installing Docker..."
 apt-get update -y
 apt-get install -y docker.io docker-compose git curl ufw
@@ -92,8 +102,11 @@ env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u "$C
 
 # 7. Caddy Configuration Template
 if [ -f "$USER_HOME/_Recurse/scripts/deployment/Caddyfile" ]; then
-  echo "Installing Caddyfile..."
+  echo "Installing Caddyfile from repo..."
   cp "$USER_HOME/_Recurse/scripts/deployment/Caddyfile" /etc/caddy/Caddyfile
+elif [ -f "$USER_HOME/Caddyfile" ]; then
+  echo "Installing Caddyfile from home dir..."
+  cp "$USER_HOME/Caddyfile" /etc/caddy/Caddyfile
 fi
 
 # 8. Firewall Setup (OS Level)
