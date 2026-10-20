@@ -9,7 +9,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Skip deploy when SSH secrets are missing
+        if: ${{ !((secrets.SERVER_IP != '' || secrets.DROPLET_IP != '') && secrets.SSH_PRIVATE_KEY != '') }}
+        run: |
+          echo "Deployment skipped: configure SERVER_IP or DROPLET_IP and SSH_PRIVATE_KEY secrets."
+
       - name: Execute Remote SSH Commands to Deploy
+        if: ${{ (secrets.SERVER_IP != '' || secrets.DROPLET_IP != '') && secrets.SSH_PRIVATE_KEY != '' }}
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_IP || secrets.DROPLET_IP }}
