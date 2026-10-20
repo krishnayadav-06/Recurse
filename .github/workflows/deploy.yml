@@ -17,7 +17,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-            cd ~/_Recurse
+            if [ -d ~/_Recurse ]; then cd ~/_Recurse; else cd ~/Recurse; fi
             git pull origin main
             npm install --production=false
             npm run build

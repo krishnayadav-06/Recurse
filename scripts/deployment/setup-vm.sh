@@ -91,9 +91,14 @@ docker exec recursev2-piston-1 cli/index.js ppman install python c++ java
 # 5. Project Directory & GitHub Actions Prep
 echo "Setting up Project Directory..."
 cd "$USER_HOME"
-if [ ! -d "$USER_HOME/_Recurse" ]; then
-  git clone https://github.com/krishnayadav-06/_Recurse.git "$USER_HOME/_Recurse"
-  chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME/_Recurse" || true
+if [ ! -d "$USER_HOME/Recurse" ] && [ ! -d "$USER_HOME/_Recurse" ]; then
+  git clone https://github.com/krishnayadav-06/Recurse.git "$USER_HOME/Recurse"
+  chown -R "$CURRENT_USER:$CURRENT_USER" "$USER_HOME/Recurse" || true
+fi
+
+PROJECT_DIR="$USER_HOME/Recurse"
+if [ -d "$USER_HOME/_Recurse" ]; then
+  PROJECT_DIR="$USER_HOME/_Recurse"
 fi
 
 # 6. PM2 Startup Resilience
@@ -101,9 +106,9 @@ echo "Configuring PM2 Startup for $CURRENT_USER..."
 env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u "$CURRENT_USER" --hp "$USER_HOME" || true
 
 # 7. Caddy Configuration Template
-if [ -f "$USER_HOME/_Recurse/scripts/deployment/Caddyfile" ]; then
+if [ -f "$PROJECT_DIR/scripts/deployment/Caddyfile" ]; then
   echo "Installing Caddyfile from repo..."
-  cp "$USER_HOME/_Recurse/scripts/deployment/Caddyfile" /etc/caddy/Caddyfile
+  cp "$PROJECT_DIR/scripts/deployment/Caddyfile" /etc/caddy/Caddyfile
 elif [ -f "$USER_HOME/Caddyfile" ]; then
   echo "Installing Caddyfile from home dir..."
   cp "$USER_HOME/Caddyfile" /etc/caddy/Caddyfile
