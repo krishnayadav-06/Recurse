@@ -68,11 +68,11 @@ function parseSampleCase(raw: SampleCase): { input: string; output: string; expl
     }
   }
 
-  return { 
-    input: input.trim(), 
-    output: output.trim(), 
-    explanation: explanation.trim() || undefined, 
-    images: raw.images 
+  return {
+    input: input.trim(),
+    output: output.trim(),
+    explanation: explanation.trim() || undefined,
+    images: raw.images
   };
 }
 
@@ -170,7 +170,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
           setIsMasterySuggested(true);
         }
       }
-      
+
 
 
       // Initialize test cases from sample_cases
@@ -236,7 +236,8 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
       setTestCaseState("results");
 
-      if (!response.ok || data.error) {
+      // Handle actual execution/compilation errors, but let test assertion failures show in the test case comparison tabs
+      if (!response.ok || (data.error && data.error !== 'Test failed')) {
         setGradingResult({
           correct: false,
           message: data.error || "An unknown error occurred during execution.",
@@ -267,7 +268,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
   const handleSubmit = async () => {
     if (!problem) return;
-    
+
     // Abort any pending execution
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -344,7 +345,7 @@ export default function ReviewPage({ params }: { params: Promise<{ id: string }>
 
   const handleRatingConfirm = async (ratingLabel: string) => {
     if (!problem || !gradingResult || !gradingResult.reviewLogId) return;
-    
+
     // Map string to FSRS rating number (1-4, 5 for Mastered)
     const ratingMap: Record<string, number> = {
       "Again": 1,
