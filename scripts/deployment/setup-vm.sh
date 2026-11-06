@@ -86,7 +86,9 @@ docker-compose up -d
 
 echo "Installing Piston Languages (Python, C++, Java)..."
 sleep 5 # Wait for container to initialize
-docker exec recursev2-piston-1 cli/index.js ppman install python c++ java
+curl -s -X POST http://127.0.0.1:2000/api/v2/packages -H "Content-Type: application/json" -d '{"language": "python", "version": "3.10.0"}'
+curl -s -X POST http://127.0.0.1:2000/api/v2/packages -H "Content-Type: application/json" -d '{"language": "gcc", "version": "10.2.0"}'
+curl -s -X POST http://127.0.0.1:2000/api/v2/packages -H "Content-Type: application/json" -d '{"language": "java", "version": "15.0.2"}'
 
 # 5. Project Directory & GitHub Actions Prep
 echo "Setting up Project Directory..."
