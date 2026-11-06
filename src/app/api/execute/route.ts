@@ -30,6 +30,17 @@ import {
 
 const PISTON_API_URL = process.env.PISTON_API_URL || 'http://localhost:2000/api/v2/execute'
 
+// --- In-Memory Caches for 0ms subsequent execution lookups ---
+interface CacheEntry<T> {
+  data: T
+  expiresAt: number
+}
+const problemMetadataCache = new Map<string, CacheEntry<any>>()
+const testSuiteMetadataCache = new Map<string, CacheEntry<any>>()
+const userAuthCache = new Map<string, CacheEntry<{ id: string }>>()
+const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour for static problems & test suites
+const USER_CACHE_TTL_MS = 30 * 1000 // 30 seconds for user auth tokens
+
 function checkAnswer(problemId: string, expectedStr: string, actualStr: string, unordered: boolean, inputStr: string): boolean {
   // --- Problem-specific custom validators ---
 
@@ -197,11 +208,11 @@ function checkAnswer(problemId: string, expectedStr: string, actualStr: string, 
 
   // --- Generic comparison ---
   if (expectedStr === actualStr) return true;
-  
+
   try {
     const e = JSON.parse(expectedStr);
     const a = JSON.parse(actualStr);
-    
+
     // If unordered array comparison is explicitly requested
     if (unordered && Array.isArray(e) && Array.isArray(a)) {
       if (e.length !== a.length) return false;
@@ -209,15 +220,8 @@ function checkAnswer(problemId: string, expectedStr: string, actualStr: string, 
       const as = [...a].sort((x, y) => JSON.stringify(x).localeCompare(JSON.stringify(y)));
       return JSON.stringify(es) === JSON.stringify(as);
     }
-    
-    // Strict deep equality for generic JSON structures
-    try {
-      import('assert').then(({ deepStrictEqual }) => deepStrictEqual(e, a));
-      // Since it's async import in then, wait we can't await here.
-      // Better to just stringify deeply or write a recursive deepEqual
-    } catch {}
-    
-    // Recursive deep equal since we can't easily sync-import assert in all environments
+
+    // Recursive deep equal for generic JSON structures
     const deepEqual = (x: any, y: any): boolean => {
       if (x === y) return true;
       if (typeof x !== 'object' || x === null || typeof y !== 'object' || y === null) return false;
@@ -229,7 +233,7 @@ function checkAnswer(problemId: string, expectedStr: string, actualStr: string, 
       }
       return true;
     };
-    
+
     if (deepEqual(e, a)) return true;
   } catch (err) { }
   return false;
@@ -272,9 +276,19 @@ function createAnonClient() {
  */
 export async function POST(request: NextRequest) {
   try {
-    // --- Authenticate the user ---
-    const serverClient = await createServerClient()
-    let { data: { user } } = await serverClient.auth.getUser()
+    // --- Authenticate the user (with short-lived cache to avoid redundant cross-ocean roundtrips) ---
+    const authHeader = request.headers.get('authorization') || request.cookies.get('sb-access-token')?.value || request.cookies.get('sb-niizdtrtcvwcnebobnss-auth-token')?.value || '';
+    const cachedAuth = authHeader ? userAuthCache.get(authHeader) : null;
+    let user = cachedAuth && cachedAuth.expiresAt > Date.now() ? (cachedAuth.data as any) : null;
+
+    if (!user) {
+      const serverClient = await createServerClient()
+      const { data: { user: fetchedUser } } = await serverClient.auth.getUser()
+      user = fetchedUser;
+      if (user && authHeader) {
+        userAuthCache.set(authHeader, { data: user, expiresAt: Date.now() + USER_CACHE_TTL_MS });
+      }
+    }
 
     if (!user && process.env.NODE_ENV === 'development' && process.env.DEV_USER_ID) {
       user = { id: process.env.DEV_USER_ID } as any
@@ -289,7 +303,7 @@ export async function POST(request: NextRequest) {
 
     // --- Rate Limiting ---
     const isDevFallback = process.env.NODE_ENV === 'development' && user.id === process.env.DEV_USER_ID;
-    
+
     // Bypass rate limiting for local dev scripts so they can bulk process tests rapidly
     if (!isDevFallback && ratelimit) {
       try {
@@ -337,19 +351,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // --- Fetch problem metadata (public, anon key) ---
-    const anonClient = createAnonClient()
-    const { data: problem, error: problemError } = await anonClient
-      .from('problems')
-      .select('input_types, output_type, unordered_output, sample_cases, starter_code, in_place')
-      .eq('id', problemId)
-      .single()
+    // --- Fetch problem metadata (using 1h memory cache for 0ms subsequent lookups) ---
+    const cachedProb = problemMetadataCache.get(problemId);
+    let problem = cachedProb && cachedProb.expiresAt > Date.now() ? cachedProb.data : null;
 
-    if (problemError || !problem) {
-      return NextResponse.json(
-        { error: `Problem not found: ${problemId}` },
-        { status: 404 }
-      )
+    if (!problem) {
+      const anonClient = createAnonClient()
+      const { data, error: problemError } = await anonClient
+        .from('problems')
+        .select('input_types, output_type, unordered_output, sample_cases, starter_code, in_place')
+        .eq('id', problemId)
+        .single()
+
+      if (problemError || !data) {
+        return NextResponse.json(
+          { error: `Problem not found: ${problemId}` },
+          { status: 404 }
+        )
+      }
+      problem = data;
+      problemMetadataCache.set(problemId, { data: problem, expiresAt: Date.now() + CACHE_TTL_MS });
     }
 
     const { input_types, output_type, unordered_output, sample_cases, starter_code, in_place } = problem
@@ -380,20 +401,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // If "submit" or "generate_expected", also fetch hidden_cases using the Service Role Key
+    // If "submit" or "generate_expected", also fetch hidden_cases (cached for 0ms lookups)
     if (action === 'submit' || action === 'generate_expected') {
-      const adminClient = createAdminClient()
-      const { data: testSuite, error: suiteError } = await adminClient
-        .from('problem_test_suites')
-        .select('hidden_cases')
-        .eq('problem_id', problemId)
-        .single()
+      const cachedSuite = testSuiteMetadataCache.get(problemId);
+      let testSuite = cachedSuite && cachedSuite.expiresAt > Date.now() ? cachedSuite.data : null;
 
-      if (suiteError || !testSuite) {
-        return NextResponse.json(
-          { error: `Test suite not found for problem: ${problemId}` },
-          { status: 404 }
-        )
+      if (!testSuite) {
+        const adminClient = createAdminClient()
+        const { data, error: suiteError } = await adminClient
+          .from('problem_test_suites')
+          .select('hidden_cases')
+          .eq('problem_id', problemId)
+          .single()
+
+        if (suiteError || !data) {
+          return NextResponse.json(
+            { error: `Test suite not found for problem: ${problemId}` },
+            { status: 404 }
+          )
+        }
+        testSuite = data;
+        testSuiteMetadataCache.set(problemId, { data: testSuite, expiresAt: Date.now() + CACHE_TTL_MS });
       }
 
       // Append hidden cases to the test cases array
@@ -478,31 +506,45 @@ export async function POST(request: NextRequest) {
     };
     const MAX_BATCH_SIZE = CUSTOM_BATCH_SIZES[problemId] || 300;
     const batches: { startIndex: number, cases: any[] }[] = [];
-    let currentBatch: any[] = [];
-    let currentBatchSize = 0;
-    let startIndex = 0;
 
-    for (let i = 0; i < testCases.length; i++) {
-      const testCase = testCases[i];
-      const caseSize = JSON.stringify(testCase).length;
+    // Calculate total input load
+    const totalInputSize = JSON.stringify(testCases).length;
+    const canRunSingleBatch = action === 'run' || (
+      totalInputSize < MAX_PAYLOAD_SIZE &&
+      testCases.length <= MAX_BATCH_SIZE
+    );
 
-      if (currentBatch.length > 0 && (currentBatchSize + caseSize > MAX_PAYLOAD_SIZE || currentBatch.length >= MAX_BATCH_SIZE)) {
-        batches.push({ startIndex, cases: currentBatch });
-        startIndex = i;
-        currentBatch = [];
-        currentBatchSize = 0;
+    if (canRunSingleBatch) {
+      // Entire test suite fits comfortably within payload and timeout limits without division
+      batches.push({ startIndex: 0, cases: testCases });
+    } else {
+      // Divide into batches only when payload load or problem size exceeds safe limits
+      let currentBatch: any[] = [];
+      let currentBatchSize = 0;
+      let startIndex = 0;
+
+      for (let i = 0; i < testCases.length; i++) {
+        const testCase = testCases[i];
+        const caseSize = JSON.stringify(testCase).length;
+
+        if (currentBatch.length > 0 && (currentBatchSize + caseSize > MAX_PAYLOAD_SIZE || currentBatch.length >= MAX_BATCH_SIZE)) {
+          batches.push({ startIndex, cases: currentBatch });
+          startIndex = i;
+          currentBatch = [];
+          currentBatchSize = 0;
+        }
+        currentBatch.push(testCase);
+        currentBatchSize += caseSize;
       }
-      currentBatch.push(testCase);
-      currentBatchSize += caseSize;
+      if (currentBatch.length > 0) {
+        batches.push({ startIndex, cases: currentBatch });
+      }
     }
-    if (currentBatch.length > 0) {
-      batches.push({ startIndex, cases: currentBatch });
-    }
-
 
     let batchResults;
     try {
-      const CONCURRENCY_LIMIT = 10;
+      // Cap concurrency to 2 to match VM CPU core count and avoid compiler thrashing
+      const CONCURRENCY_LIMIT = 2;
       batchResults = [];
       const executing = new Set<Promise<void>>();
 
@@ -524,8 +566,8 @@ export async function POST(request: NextRequest) {
             compile_timeout: 10000,
             run_memory_limit: 268435456, // 256 MB
             compile_memory_limit: 536870912, // 512 MB
-            compile_args: language === 'cpp' 
-              ? ['-std=c++20', '-O2', '-Wall', '-Werror=uninitialized', '-Werror=return-type', '-Werror=sequence-point', '-fsanitize=address,undefined', '-fno-sanitize-recover=undefined'] 
+            compile_args: language === 'cpp'
+              ? ['-std=c++20', '-O2', '-Wall', '-Werror=uninitialized', '-Werror=return-type', '-Werror=sequence-point', '-fsanitize=address,undefined', '-fno-sanitize-recover=undefined']
               : undefined,
           };
 
@@ -696,7 +738,7 @@ export async function POST(request: NextRequest) {
       // serverClient acts as an anonymous user and will fail RLS policies.
       // In development, if we fell back to the DEV_USER_ID, we must use the admin client to bypass RLS.
       const isDevFallback = process.env.NODE_ENV === 'development' && user.id === process.env.DEV_USER_ID;
-      const dbClient = isDevFallback ? createAdminClient() : serverClient;
+      const dbClient = isDevFallback ? createAdminClient() : await createServerClient();
 
       const { data: logData, error: logError } = await dbClient.from('review_logs').insert({
         user_id: user.id,
